@@ -1,6 +1,62 @@
 @import "tailwindcss";
 
-body {
-  margin: 0;
-  min-height: 100vh;
+/* Minerva — identidade: vermelho romano, dourado imperial, neutros, tipografia */
+@theme {
+  /* Paleta */
+  --color-minerva-romano: #8b1e1e;
+  --color-minerva-dourado: #d4af37;
+  --color-minerva-marmore: #ffffff;
+  --color-minerva-cinza-claro: #f2f2f2;
+  --color-minerva-cinza-escuro: #2e2e2e;
+
+  /* Primária / destaques (tokens semânticos para uso em componentes) */
+  --color-primary: var(--color-minerva-romano);
+  --color-accent: var(--color-minerva-dourado);
+
+  --font-display: "Cinzel", ui-serif, Georgia, "Times New Roman", serif;
+  --font-sans: "Source Sans 3", ui-sans-serif, system-ui, sans-serif;
+}
+
+@layer base {
+  :root {
+    color-scheme: light;
+  }
+
+  html {
+    font-family: var(--font-sans);
+  }
+
+  body {
+    margin: 0;
+    min-height: 100vh;
+    background-color: var(--color-minerva-cinza-claro);
+    color: var(--color-minerva-cinza-escuro);
+    font-family: var(--font-sans);
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+  }
+
+  h1,
+  h2,
+  h3,
+  h4,
+  h5,
+  h6 {
+    font-family: var(--font-display);
+    font-weight: 700;
+    color: var(--color-minerva-cinza-escuro);
+  }
+
+  a {
+    color: var(--color-minerva-romano);
+  }
+
+  a:hover {
+    color: color-mix(in srgb, var(--color-minerva-romano) 88%, black);
+  }
+
+  :focus-visible {
+    outline: 2px solid var(--color-minerva-romano);
+    outline-offset: 2px;
+  }
 }

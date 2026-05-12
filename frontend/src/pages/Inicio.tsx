@@ -3,15 +3,15 @@ import { Link } from 'react-router-dom'
 export function Inicio() {
   return (
     <div className="mx-auto max-w-2xl space-y-6 px-4 py-12">
-      <p className="text-sm font-medium uppercase tracking-wide text-indigo-600">
+      <p className="text-sm font-semibold uppercase tracking-[0.2em] text-accent">
         Minerva
       </p>
-      <h1 className="text-3xl font-semibold tracking-tight text-slate-900">
+      <h1 className="font-display text-3xl font-bold tracking-tight text-minerva-cinza-escuro">
         Gestão acadêmica
       </h1>
-      <p className="text-slate-600">
+      <p className="text-base leading-relaxed text-minerva-cinza-escuro/85">
         Frontend em React + Vite + Tailwind. A API Spring Boot deve estar em{' '}
-        <code className="rounded bg-slate-100 px-1.5 py-0.5 text-sm text-slate-800">
+        <code className="rounded-md border border-minerva-cinza-escuro/10 bg-minerva-marmore px-1.5 py-0.5 text-sm text-minerva-cinza-escuro">
           http://localhost:8080
         </code>
         .
@@ -19,7 +19,7 @@ export function Inicio() {
       <ul className="flex flex-wrap gap-3 text-sm">
         <li>
           <Link
-            className="font-medium text-indigo-600 underline-offset-4 hover:underline"
+            className="font-semibold text-primary underline-offset-4 hover:underline"
             to="/cursos"
           >
             Ver cursos (API)
@@ -27,7 +27,7 @@ export function Inicio() {
         </li>
         <li>
           <a
-            className="font-medium text-indigo-600 underline-offset-4 hover:underline"
+            className="font-semibold text-primary underline-offset-4 hover:underline"
             href="http://localhost:8080/swagger-ui.html"
             target="_blank"
             rel="noreferrer"
