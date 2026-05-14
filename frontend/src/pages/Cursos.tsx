@@ -97,24 +97,35 @@ export function Cursos() {
   )
 }
 
+type ErroHttpLike = {
+  response?: { status?: number; data?: { mensagem?: string } }
+  code?: string
+}
+
+function comoErroHttp(e: unknown): ErroHttpLike | null {
+  if (typeof e !== 'object' || e === null) return null
+  return e as ErroHttpLike
+}
+
 function axiosErrorMessage(e: unknown): string | null {
-  if (axios.isAxiosError(e) && e.response?.status === 502) {
-    return 'A API não está acessível (502). O Spring Boot precisa estar rodando na porta 8080 — na pasta backend execute: .\\mvnw spring-boot:run'
+  const ex = comoErroHttp(e)
+  if (axios.isAxiosError(e)) {
+    if (ex?.response?.status === 502) {
+      return 'A API não está acessível (502). O Spring Boot precisa estar rodando na porta 8080 — na pasta backend execute: .\\mvnw spring-boot:run'
+    }
+    if (!ex?.response) {
+      return null
+    }
   }
-  if (axios.isAxiosError(e) && !e.response) {
-    return null
-  }
-  if (typeof e === 'object' && e !== null && 'response' in e) {
-    const r = (e as { response?: { data?: { mensagem?: string } } }).response
-    const m = r?.data?.mensagem
-    if (typeof m === 'string') return m
-  }
+  const m = ex?.response?.data?.mensagem
+  if (typeof m === 'string') return m
   if (e instanceof Error) return e.message
   return null
 }
 
 function mensagemRede(e: unknown): string | null {
-  if (axios.isAxiosError(e) && e.code === 'ERR_NETWORK') {
+  const ex = comoErroHttp(e)
+  if (axios.isAxiosError(e) && ex?.code === 'ERR_NETWORK') {
     return 'Não há conexão com a API. Inicie o backend (na pasta backend: .\\mvnw spring-boot:run) e deixe o npm run dev ativo.'
   }
   return null

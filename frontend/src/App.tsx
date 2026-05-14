@@ -2,14 +2,16 @@ import { BrowserRouter, Link, Navigate, Route, Routes, useLocation } from 'react
 import { Cursos } from './pages/Cursos'
 import { Inicio } from './pages/Inicio'
 import { Login } from './pages/Login'
+import { Cadastro } from './pages/Cadastro'
 
 function AppShell() {
   const location = useLocation()
-  const isLoginPage = location.pathname === '/login'
+  const withoutHeader = ['/login', '/cadastro']
+  const showHeader = !withoutHeader.includes(location.pathname)
 
   return (
     <div className="min-h-screen bg-minerva-cinza-claro">
-      {!isLoginPage && (
+      {showHeader && (
         <header className="border-b border-minerva-cinza-escuro/10 bg-minerva-marmore shadow-sm shadow-minerva-cinza-escuro/5">
           <nav className="mx-auto flex max-w-3xl items-center gap-6 px-4 py-3 text-sm text-minerva-cinza-escuro">
             <Link
@@ -33,6 +35,7 @@ function AppShell() {
           <Route path="/" element={<Inicio />} />
           <Route path="/cursos" element={<Cursos />} />
           <Route path="/login" element={<Login />} />
+          <Route path="/cadastro" element={<Cadastro />} />
           <Route path="*" element={<Navigate to="/" replace />} />
         </Routes>
       </main>
