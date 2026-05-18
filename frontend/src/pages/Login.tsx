@@ -55,77 +55,77 @@ export function Login() {
               Informe suas credenciais para continuar.
             </p>
           </div>
-        <form onSubmit={handleSubmit} className="space-y-4">
-          <div className="space-y-1.5">
-            <label
-              htmlFor="email"
-              className="text-sm font-medium text-minerva-cinza-escuro"
-            >
-              E-mail
-            </label>
-            <input
-              id="email"
-              type="email"
-              required
-              autoComplete="email"
-              value={email}
-              onChange={(e) => setEmail(e.target.value)}
-              placeholder="voce@minerva.com"
-              className="w-full rounded-lg border border-minerva-cinza-escuro/15 bg-minerva-marmore px-4 py-2.5 text-minerva-cinza-escuro placeholder:text-minerva-cinza-escuro/40 outline-none transition focus:border-primary focus:ring-2 focus:ring-primary/20"
-            />
-          </div>
-
-          <div className="space-y-1.5">
-            <div className="flex items-center justify-between">
+          <form onSubmit={handleSubmit} className="space-y-4">
+            <div className="space-y-1.5">
               <label
-                htmlFor="senha"
+                htmlFor="email"
                 className="text-sm font-medium text-minerva-cinza-escuro"
               >
-                Senha
+                E-mail
               </label>
-              <a
-                href="#"
-                className="text-xs font-semibold text-primary hover:underline"
-              >
-                Esqueci minha senha
-              </a>
+              <input
+                id="email"
+                type="email"
+                required
+                autoComplete="email"
+                value={email}
+                onChange={(e) => setEmail(e.target.value)}
+                placeholder="voce@minerva.com"
+                className="w-full rounded-lg border border-minerva-cinza-escuro/15 bg-minerva-marmore px-4 py-2.5 text-minerva-cinza-escuro placeholder:text-minerva-cinza-escuro/40 outline-none transition focus:border-primary focus:ring-2 focus:ring-primary/20"
+              />
             </div>
-            <input
-              id="senha"
-              type="password"
-              required
-              autoComplete="current-password"
-              value={password}
-              onChange={(e) => setPassword(e.target.value)}
-              placeholder="••••••••"
-              className="w-full rounded-lg border border-minerva-cinza-escuro/15 bg-minerva-marmore px-4 py-2.5 text-minerva-cinza-escuro placeholder:text-minerva-cinza-escuro/40 outline-none transition focus:border-primary focus:ring-2 focus:ring-primary/20"
-            />
+
+            <div className="space-y-1.5">
+              <div className="flex items-center justify-between">
+                <label
+                  htmlFor="senha"
+                  className="text-sm font-medium text-minerva-cinza-escuro"
+                >
+                  Senha
+                </label>
+                <a
+                  href="#"
+                  className="text-xs font-semibold text-primary hover:underline"
+                >
+                  Esqueci minha senha
+                </a>
+              </div>
+              <input
+                id="senha"
+                type="password"
+                required
+                autoComplete="current-password"
+                value={password}
+                onChange={(e) => setPassword(e.target.value)}
+                placeholder="••••••••"
+                className="w-full rounded-lg border border-minerva-cinza-escuro/15 bg-minerva-marmore px-4 py-2.5 text-minerva-cinza-escuro placeholder:text-minerva-cinza-escuro/40 outline-none transition focus:border-primary focus:ring-2 focus:ring-primary/20"
+              />
+            </div>
+
+            <label className="flex items-center gap-2 text-sm text-minerva-cinza-escuro/80">
+              <input
+                type="checkbox"
+                className="h-4 w-4 accent-[var(--color-primary)]"
+              />
+              Manter conectado
+            </label>
+
+            <button
+              type="submit"
+              className="w-full rounded-lg bg-primary py-3 font-semibold uppercase tracking-[0.15em] text-minerva-marmore transition hover:bg-primary/90 active:bg-primary/80"
+            >
+              Entrar
+            </button>
+          </form>
+          <div className="space-y-3">
+            <hr className="border-minerva-cinza-escuro/10" />
+            <p className="text-center text-xs text-minerva-cinza-escuro/60">
+              Não tem conta?{" "}
+              <Link to="/cadastro" className="font-semibold text-primary hover:underline">
+                Criar conta
+              </Link>
+            </p>
           </div>
-
-          <label className="flex items-center gap-2 text-sm text-minerva-cinza-escuro/80">
-            <input
-              type="checkbox"
-              className="h-4 w-4 accent-[var(--color-primary)]"
-            />
-            Manter conectado
-          </label>
-
-          <button
-            type="submit"
-            className="w-full rounded-lg bg-primary py-3 font-semibold uppercase tracking-[0.15em] text-minerva-marmore transition hover:bg-primary/90 active:bg-primary/80"
-          >
-            Entrar
-          </button>
-        </form>
-        <div className="space-y-3">
-          <hr className="border-minerva-cinza-escuro/10" />
-          <p className="text-center text-xs text-minerva-cinza-escuro/60">
-            Não tem acesso?{" "}
-            <Link to="/" className="font-semibold text-primary hover:underline">
-              Fale com o administrador
-            </Link>
-          </p>
-        </div>
         </div>
       </section>
     </div>
