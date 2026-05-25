@@ -1,9 +1,11 @@
 import { useState } from "react";
 import { Link } from "react-router-dom";
+import { EyeIcon, EyeSlashIcon } from "@heroicons/react/24/outline";
 
 export function Login() {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
+  const [showPassword, setShowPassword] = useState(false);
 
   function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
@@ -15,9 +17,9 @@ export function Login() {
       <aside
         className="relative hidden md:flex flex-col justify-between overflow-hidden bg-primary p-12 text-minerva-marmore"
         style={{
-          backgroundImage: 'url(/minerva-login-side.png)',
-          backgroundSize: 'cover',
-          backgroundPosition: 'center',
+          backgroundImage: "url(/minerva-login-side.png)",
+          backgroundSize: "cover",
+          backgroundPosition: "center",
         }}
       >
         <div className="absolute inset-0 bg-gradient-to-b from-primary/85 via-primary/65 to-primary/90" />
@@ -90,16 +92,30 @@ export function Login() {
                   Esqueci minha senha
                 </a>
               </div>
-              <input
-                id="senha"
-                type="password"
-                required
-                autoComplete="current-password"
-                value={password}
-                onChange={(e) => setPassword(e.target.value)}
-                placeholder="••••••••"
-                className="w-full rounded-lg border border-minerva-cinza-escuro/15 bg-minerva-marmore px-4 py-2.5 text-minerva-cinza-escuro placeholder:text-minerva-cinza-escuro/40 outline-none transition focus:border-primary focus:ring-2 focus:ring-primary/20"
-              />
+              <div className="relative">
+                <input
+                  id="senha"
+                  type={showPassword ? "text" : "password"}
+                  required
+                  autoComplete="current-password"
+                  value={password}
+                  onChange={(e) => setPassword(e.target.value)}
+                  placeholder="••••••••"
+                  className="w-full rounded-lg border border-minerva-cinza-escuro/15 bg-minerva-marmore px-4 py-2.5 pr-10 text-minerva-cinza-escuro placeholder:text-minerva-cinza-escuro/40 outline-none transition focus:border-primary focus:ring-2 focus:ring-primary/20"
+                />
+                <button
+                  type="button"
+                  onClick={() => setShowPassword((prev) => !prev)}
+                  aria-label={showPassword ? "Ocultar senha" : "Mostrar senha"}
+                  className="absolute right-0 top-0 bottom-0 flex items-center justify-center w-10 rounded-r-lg text-primary hover:bg-minerva-cinza-claro"
+                >
+                  {showPassword ? (
+                    <EyeSlashIcon className="h-5 w-5" />
+                  ) : (
+                    <EyeIcon className="h-5 w-5" />
+                  )}
+                </button>
+              </div>
             </div>
 
             <label className="flex items-center gap-2 text-sm text-minerva-cinza-escuro/80">
@@ -121,7 +137,10 @@ export function Login() {
             <hr className="border-minerva-cinza-escuro/10" />
             <p className="text-center text-xs text-minerva-cinza-escuro/60">
               Não tem conta?{" "}
-              <Link to="/cadastro" className="font-semibold text-primary hover:underline">
+              <Link
+                to="/cadastro"
+                className="font-semibold text-primary hover:underline"
+              >
                 Criar conta
               </Link>
             </p>

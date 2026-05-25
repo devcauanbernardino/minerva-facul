@@ -3,6 +3,7 @@ import { Cursos } from './pages/Cursos'
 import { Inicio } from './pages/Inicio'
 import { Login } from './pages/Login'
 import { Cadastro } from './pages/Cadastro'
+import { Alunos } from './pages/Alunos'
 
 function AppShell() {
   const location = useLocation()
@@ -34,6 +35,7 @@ function AppShell() {
         <Routes>
           <Route path="/" element={<Inicio />} />
           <Route path="/cursos" element={<Cursos />} />
+          <Route path="/alunos" element={<Alunos />} />
           <Route path="/login" element={<Login />} />
           <Route path="/cadastro" element={<Cadastro />} />
           <Route path="*" element={<Navigate to="/" replace />} />

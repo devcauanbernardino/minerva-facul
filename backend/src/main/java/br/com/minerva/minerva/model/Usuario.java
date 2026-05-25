@@ -28,5 +28,10 @@ public class Usuario {
 
     @Column(nullable = false)
     private String senha;
+
+    private String tipo;
+    private String curso;
+    private Boolean bolsista;
+    private String especialidade;
 }
 
