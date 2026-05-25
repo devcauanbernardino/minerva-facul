@@ -23,6 +23,10 @@ public class UsuarioService {
         usuario.setNome(request.getNome());
         usuario.setEmail(request.getEmail());
         usuario.setSenha(passwordEncoder.encode(request.getSenha()));
+        usuario.setTipo(request.getTipo());
+        usuario.setCurso(request.getCurso());
+        usuario.setBolsista(request.getBolsista() != null ? request.getBolsista() : false);
+        usuario.setEspecialidade(request.getEspecialidade());
         Usuario salvo = usuarioRepository.save(usuario);
         return paraResponse(salvo);
     }

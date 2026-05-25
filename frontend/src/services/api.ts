@@ -8,7 +8,4 @@ function resolveBaseURL(): string {
 
 export const api = axios.create({
   baseURL: resolveBaseURL(),
-  headers: {
-    'Content-Type': 'application/json',
-  },
 })

@@ -50,7 +50,7 @@ public class CursoService {
 
 	private Curso buscarEntidade(Long id) {
 		return cursoRepository.findById(id)
-			.orElseThrow(() -> new RecursoNaoEncontradoException("Curso não encontrado com id: " + id));
+				.orElseThrow(() -> new RecursoNaoEncontradoException("Curso não encontrado com id: " + id));
 	}
 
 	private void aplicar(CursoRequest request, Curso curso) {
@@ -60,6 +60,11 @@ public class CursoService {
 	}
 
 	private CursoResponse paraResponse(Curso curso) {
-		return new CursoResponse(curso.getId(), curso.getNome(), curso.getCargaHoraria(), curso.getDuracaoSemestres());
+		return new CursoResponse(
+				curso.getId(),
+				curso.getNome(),
+				curso.getCargaHoraria(),
+				curso.getDuracaoSemestres());
 	}
 }
+
