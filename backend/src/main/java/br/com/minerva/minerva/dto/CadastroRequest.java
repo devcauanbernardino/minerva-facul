@@ -19,6 +19,9 @@ public class CadastroRequest {
 	@Email(message = "E-mail inválido")
 	private String email;
 
+	@NotBlank(message = "A matrícula é obrigatória")
+	private String matricula;
+
 	@NotBlank(message = "A senha é obrigatória")
 	@Size(min = 6, message = "A senha deve ter pelo menos 6 caracteres")
 	private String senha;

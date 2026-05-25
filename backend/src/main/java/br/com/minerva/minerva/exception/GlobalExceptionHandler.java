@@ -25,6 +25,17 @@ public class GlobalExceptionHandler {
 		return ResponseEntity.status(HttpStatus.CONFLICT).body(body);
 	}
 
+	@ExceptionHandler(CredenciaisInvalidasException.class)
+	public ResponseEntity<ErroResponse> credenciaisInvalidas(CredenciaisInvalidasException ex) {
+		ErroResponse body = ErroResponse.builder()
+			.timestamp(Instant.now())
+			.status(HttpStatus.UNAUTHORIZED.value())
+			.erro("Não autorizado")
+			.mensagem(ex.getMessage())
+			.build();
+		return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(body);
+	}
+
 	@ExceptionHandler(RecursoNaoEncontradoException.class)
 	public ResponseEntity<ErroResponse> recursoNaoEncontrado(RecursoNaoEncontradoException ex) {
 		ErroResponse body = ErroResponse.builder()

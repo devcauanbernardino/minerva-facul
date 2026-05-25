@@ -13,6 +13,7 @@ import org.springframework.web.bind.annotation.RestController;
 import org.springframework.web.multipart.MultipartFile;
 
 import br.com.minerva.minerva.dto.CadastroRequest;
+import br.com.minerva.minerva.dto.LoginRequest;
 import br.com.minerva.minerva.dto.UsuarioResponse;
 import br.com.minerva.minerva.service.UsuarioService;
 import jakarta.validation.Valid;
@@ -36,6 +37,7 @@ public class AuthController {
     public ResponseEntity<UsuarioResponse> cadastrarMultipart(
             @RequestParam String nome,
             @RequestParam String email,
+            @RequestParam String matricula,
             @RequestParam String senha,
             @RequestParam String tipo,
             @RequestParam(required = false) String curso,
@@ -45,6 +47,7 @@ public class AuthController {
         CadastroRequest request = new CadastroRequest();
         request.setNome(nome);
         request.setEmail(email);
+        request.setMatricula(matricula);
         request.setSenha(senha);
         request.setTipo(tipo);
         request.setCurso(curso);
@@ -54,5 +57,10 @@ public class AuthController {
         UsuarioResponse criado = usuarioService.cadastrar(request);
         URI location = URI.create("/auth/usuarios/" + criado.getId());
         return ResponseEntity.created(location).body(criado);
+    }
+
+    @PostMapping("/login")
+    public ResponseEntity<UsuarioResponse> login(@Valid @RequestBody LoginRequest request) {
+        return ResponseEntity.ok(usuarioService.login(request));
     }
 }
