@@ -1,7 +1,9 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import axios from "axios";
 import { api } from "../services/api";
+import { gerarMatricula } from "../utils/matricula";
+import type { Curso } from "../types/curso";
 import { EyeIcon, EyeSlashIcon } from "@heroicons/react/24/outline";
 
 export function Cadastro() {
@@ -15,9 +17,35 @@ export function Cadastro() {
   const [curso, setCurso] = useState("");
   const [bolsista, setBolsista] = useState(false);
   const [especialidadeDoc, setEspecialidadeDoc] = useState<File | null>(null);
+  const [cursos, setCursos] = useState<Curso[]>([]);
+  const [carregandoCursos, setCarregandoCursos] = useState(true);
+  const [erroCursos, setErroCursos] = useState<string | null>(null);
   const [erro, setErro] = useState<string | null>(null);
   const [enviando, setEnviando] = useState(false);
   const navigate = useNavigate();
+
+  useEffect(() => {
+    let ativo = true;
+    api
+      .get<Curso[]>("/cursos")
+      .then((res) => {
+        if (!ativo) return;
+        setCursos(res.data);
+        setErroCursos(null);
+      })
+      .catch(() => {
+        if (!ativo) return;
+        setErroCursos(
+          "Não foi possível carregar os cursos. Verifique se o backend está na porta 8080.",
+        );
+      })
+      .finally(() => {
+        if (ativo) setCarregandoCursos(false);
+      });
+    return () => {
+      ativo = false;
+    };
+  }, []);
 
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
@@ -32,7 +60,7 @@ export function Cadastro() {
       return;
     }
     if (!isProfessor && curso.trim().length === 0) {
-      setErro("Informe o curso do aluno.");
+      setErro("Selecione um curso.");
       return;
     }
     if (isProfessor && especialidadeDoc === null) {
@@ -41,12 +69,14 @@ export function Cadastro() {
     }
 
     setEnviando(true);
+    const matricula = gerarMatricula();
 
     try {
       if (isProfessor) {
         const formData = new FormData();
         formData.append("nome", nome);
         formData.append("email", email);
+        formData.append("matricula", matricula);
         formData.append("senha", senha);
         formData.append("tipo", "PROFESSOR");
         formData.append("especialidadeDoc", especialidadeDoc!);
@@ -56,6 +86,7 @@ export function Cadastro() {
         await api.post("/auth/cadastro", {
           nome,
           email,
+          matricula,
           senha,
           tipo: "ALUNO",
           curso,
@@ -63,7 +94,7 @@ export function Cadastro() {
         });
       }
 
-      navigate("/login");
+      navigate("/login", { state: { matricula } });
     } catch (err) {
       if (axios.isAxiosError(err) && err.response?.status === 409) {
         const data = err.response.data as { mensagem?: string };
@@ -270,14 +301,36 @@ export function Cadastro() {
                   >
                     Curso
                   </label>
-                  <input
+                  <select
                     id="cadastro-curso"
-                    type="text"
+                    required
                     value={curso}
                     onChange={(e) => setCurso(e.target.value)}
-                    placeholder="Nome do curso"
-                    className="w-full rounded-lg border border-minerva-cinza-escuro/15 bg-minerva-marmore px-4 py-2.5 text-minerva-cinza-escuro placeholder:text-minerva-cinza-escuro/40 outline-none transition focus:border-primary focus:ring-2 focus:ring-primary/20"
-                  />
+                    disabled={carregandoCursos || cursos.length === 0}
+                    className="w-full rounded-lg border border-minerva-cinza-escuro/15 bg-minerva-marmore px-4 py-2.5 text-minerva-cinza-escuro outline-none transition focus:border-primary focus:ring-2 focus:ring-primary/20 disabled:cursor-not-allowed disabled:opacity-60"
+                  >
+                    <option value="">
+                      {carregandoCursos
+                        ? "Carregando cursos..."
+                        : "Selecione um curso"}
+                    </option>
+                    {cursos.map((c) => (
+                      <option key={c.id} value={c.nome}>
+                        {c.nome}
+                      </option>
+                    ))}
+                  </select>
+                  {erroCursos ? (
+                    <p className="text-xs text-red-700">{erroCursos}</p>
+                  ) : null}
+                  {!carregandoCursos &&
+                  cursos.length === 0 &&
+                  !erroCursos ? (
+                    <p className="text-xs text-minerva-cinza-escuro/60">
+                      Nenhum curso disponível. Reinicie o backend para criar
+                      os cursos padrão.
+                    </p>
+                  ) : null}
                 </div>
                 <label className="flex items-center gap-3 text-sm text-minerva-cinza-escuro">
                   <input

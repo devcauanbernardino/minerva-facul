@@ -1,15 +1,61 @@
 import { useState } from "react";
-import { Link } from "react-router-dom";
+import { Link, useLocation, useNavigate } from "react-router-dom";
+import axios from "axios";
+import { api } from "../services/api";
+import { normalizarMatricula } from "../utils/matricula";
 import { EyeIcon, EyeSlashIcon } from "@heroicons/react/24/outline";
 
+type LoginLocationState = {
+  matricula?: string;
+};
+
 export function Login() {
-  const [email, setEmail] = useState("");
+  const location = useLocation();
+  const navigate = useNavigate();
+  const matriculaNova = (location.state as LoginLocationState | null)?.matricula;
+
+  const [matricula, setMatricula] = useState(matriculaNova ?? "");
   const [password, setPassword] = useState("");
   const [showPassword, setShowPassword] = useState(false);
+  const [erro, setErro] = useState<string | null>(null);
+  const [enviando, setEnviando] = useState(false);
 
-  function handleSubmit(e: React.FormEvent) {
+  async function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
-    console.log({ email, password });
+    setErro(null);
+    setEnviando(true);
+
+    try {
+      const { data } = await api.post("/auth/login", {
+        matricula: normalizarMatricula(matricula),
+        senha: password,
+      });
+
+      sessionStorage.setItem(
+        "minerva_usuario",
+        JSON.stringify({
+          id: data.id,
+          nome: data.nome,
+          email: data.email,
+          matricula: data.matricula,
+        }),
+      );
+
+      navigate("/");
+    } catch (err) {
+      if (axios.isAxiosError(err) && err.response?.status === 401) {
+        const body = err.response.data as { mensagem?: string };
+        setErro(body.mensagem ?? "Matrícula ou senha incorretos.");
+      } else if (axios.isAxiosError(err) && err.response?.status === 400) {
+        setErro("Informe a matrícula e a senha.");
+      } else {
+        setErro(
+          "Não foi possível entrar. O backend está rodando na porta 8080?",
+        );
+      }
+    } finally {
+      setEnviando(false);
+    }
   }
 
   return (
@@ -54,27 +100,50 @@ export function Login() {
               Entrar
             </h1>
             <p className="text-sm text-minerva-cinza-escuro/70">
-              Informe suas credenciais para continuar.
+              Use a matrícula gerada no cadastro e sua senha.
             </p>
           </div>
+
+          {matriculaNova ? (
+            <p
+              className="rounded-lg border border-primary/20 bg-primary/5 px-3 py-2 text-sm text-minerva-cinza-escuro"
+              role="status"
+            >
+              Cadastro concluído. Sua matrícula:{" "}
+              <strong className="font-mono text-primary">{matriculaNova}</strong>
+            </p>
+          ) : null}
+
+          {erro ? (
+            <p
+              className="rounded-lg border border-red-200 bg-red-50 px-3 py-2 text-sm text-red-800"
+              role="alert"
+            >
+              {erro}
+            </p>
+          ) : null}
+
           <form onSubmit={handleSubmit} className="space-y-4">
             <div className="space-y-1.5">
               <label
-                htmlFor="email"
+                htmlFor="matricula"
                 className="text-sm font-medium text-minerva-cinza-escuro"
               >
-                E-mail
+                Matrícula
               </label>
               <input
-                id="email"
-                type="email"
+                id="matricula"
+                type="text"
                 required
-                autoComplete="email"
-                value={email}
-                onChange={(e) => setEmail(e.target.value)}
-                placeholder="voce@minerva.com"
-                className="w-full rounded-lg border border-minerva-cinza-escuro/15 bg-minerva-marmore px-4 py-2.5 text-minerva-cinza-escuro placeholder:text-minerva-cinza-escuro/40 outline-none transition focus:border-primary focus:ring-2 focus:ring-primary/20"
+                autoComplete="username"
+                value={matricula}
+                onChange={(e) => setMatricula(e.target.value)}
+                placeholder="2026.05.25.143052"
+                className="w-full rounded-lg border border-minerva-cinza-escuro/15 bg-minerva-marmore px-4 py-2.5 font-mono text-minerva-cinza-escuro placeholder:text-minerva-cinza-escuro/40 outline-none transition focus:border-primary focus:ring-2 focus:ring-primary/20"
               />
+              <p className="text-xs text-minerva-cinza-escuro/60">
+                Formato: AAAA.MM.DD.HHmmss (gerada automaticamente no cadastro)
+              </p>
             </div>
 
             <div className="space-y-1.5">
@@ -128,9 +197,10 @@ export function Login() {
 
             <button
               type="submit"
-              className="w-full rounded-lg bg-primary py-3 font-semibold uppercase tracking-[0.15em] text-minerva-marmore transition hover:bg-primary/90 active:bg-primary/80"
+              disabled={enviando}
+              className="w-full rounded-lg bg-primary py-3 font-semibold uppercase tracking-[0.15em] text-minerva-marmore transition hover:bg-primary/90 active:bg-primary/80 disabled:opacity-60"
             >
-              Entrar
+              {enviando ? "Entrando..." : "Entrar"}
             </button>
           </form>
           <div className="space-y-3">

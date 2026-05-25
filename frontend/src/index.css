@@ -55,6 +55,21 @@
     color: color-mix(in srgb, var(--color-minerva-romano) 88%, black);
   }
 
+  button:not(:disabled),
+  [role="button"]:not(:disabled),
+  label[for]:not([aria-disabled="true"]) {
+    cursor: pointer;
+  }
+
+  button:disabled,
+  select:disabled {
+    cursor: not-allowed;
+  }
+
+  select:not(:disabled) {
+    cursor: pointer;
+  }
+
   :focus-visible {
     outline: 2px solid var(--color-minerva-romano);
     outline-offset: 2px;

@@ -26,6 +26,9 @@ public class Usuario {
     @Column(unique = true, nullable = false)
     private String email;
 
+    @Column
+    private String matricula;
+
     @Column(nullable = false)
     private String senha;
 
