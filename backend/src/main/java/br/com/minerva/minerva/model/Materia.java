@@ -2,6 +2,8 @@ package br.com.minerva.minerva.model;
 
 import jakarta.persistence.*;
 import lombok.*;
+import java.util.ArrayList;
+import java.util.List;
 
 @Entity
 @Table(name = "materias")
@@ -17,4 +19,10 @@ public class Materia {
     @ManyToOne
     @JoinColumn(name = "curso_id", nullable = false)
     private Curso curso;
+
+    @ManyToMany(mappedBy = "materias")
+    private List<Professor> professores = new ArrayList<>();
+
+    @OneToMany(mappedBy = "materia")
+    private List<Matricula> matriculas = new ArrayList<>();
 }
