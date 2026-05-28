@@ -1,6 +1,9 @@
 package br.com.minerva.minerva.model;
 
 import java.time.LocalDateTime;
+import java.util.ArrayList;
+import java.util.List;
+
 import jakarta.persistence.*;
 import lombok.*;
 
@@ -29,4 +32,7 @@ public class Aluno {
 
     @Column(nullable = false)
     private String senha;
+
+    @OneToMany(mappedBy = "aluno", cascade = CascadeType.ALL, orphanRemoval = true)
+    private List<Matricula> matriculas = new ArrayList<>();
 }
