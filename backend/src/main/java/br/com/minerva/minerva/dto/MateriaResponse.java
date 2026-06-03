@@ -8,4 +8,6 @@ import lombok.*;
 public class MateriaResponse {
     private Long id;
     private String nome;
+    private Long cursoId;
+    private String cursoNome;
 }
