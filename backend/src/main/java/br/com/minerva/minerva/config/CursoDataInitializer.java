@@ -2,6 +2,7 @@ package br.com.minerva.minerva.config;
 
 import org.springframework.boot.ApplicationArguments;
 import org.springframework.boot.ApplicationRunner;
+import org.springframework.core.annotation.Order;
 import org.springframework.stereotype.Component;
 
 import br.com.minerva.minerva.model.Curso;
@@ -9,6 +10,7 @@ import br.com.minerva.minerva.repository.CursoRepository;
 import lombok.RequiredArgsConstructor;
 
 @Component
+@Order(1)
 @RequiredArgsConstructor
 public class CursoDataInitializer implements ApplicationRunner {
 

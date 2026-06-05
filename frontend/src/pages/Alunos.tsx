@@ -1,4 +1,5 @@
 import { useEffect, useState } from 'react'
+import { AlertaErro, PageHeader } from '../components/PageHeader'
 import { api } from '../services/api'
 import type { Aluno } from '../types/aluno'
 import type { Curso } from '../types/curso'
@@ -69,18 +70,12 @@ export function Alunos() {
 
   return (
     <div className="mx-auto max-w-4xl px-4 py-10">
-      <div className="mb-8 flex flex-wrap items-center justify-between gap-4">
-        <h1 className="font-display text-2xl font-bold text-minerva-cinza-escuro">Alunos</h1>
-      </div>
+      <PageHeader
+        titulo="Alunos"
+        subtitulo="Cadastro e listagem via API acadêmica."
+      />
 
-      {erro && (
-        <div
-          className="mb-6 rounded-lg border border-primary/25 bg-primary/[0.06] px-4 py-3 text-sm text-minerva-cinza-escuro"
-          role="alert"
-        >
-          {erro}
-        </div>
-      )}
+      {erro ? <AlertaErro mensagem={erro} /> : null}
 
       <section className="mb-10 grid gap-6 lg:grid-cols-[1.5fr_1fr]">
         <div className="rounded-xl border border-minerva-cinza-escuro/10 bg-minerva-marmore p-6 shadow-sm shadow-minerva-cinza-escuro/5">

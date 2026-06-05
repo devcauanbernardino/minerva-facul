@@ -1,7 +1,9 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { Link, useLocation, useNavigate } from "react-router-dom";
 import axios from "axios";
 import { api } from "../services/api";
+import type { TipoUsuario, UsuarioSessao } from "../types/auth";
+import { getUsuario, setUsuario } from "../utils/auth";
 import { normalizarMatricula } from "../utils/matricula";
 
 type LoginLocationState = {
@@ -19,6 +21,10 @@ export function Login() {
   const [erro, setErro] = useState<string | null>(null);
   const [enviando, setEnviando] = useState(false);
 
+  useEffect(() => {
+    if (getUsuario()) navigate("/", { replace: true });
+  }, [navigate]);
+
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
     setErro(null);
@@ -30,16 +36,15 @@ export function Login() {
         senha: password,
       });
 
-      sessionStorage.setItem(
-        "minerva_usuario",
-        JSON.stringify({
-          id: data.id,
-          nome: data.nome,
-          email: data.email,
-          matricula: data.matricula,
-        }),
-      );
-
+      const tipo = (data.tipo?.toUpperCase() ?? "ALUNO") as TipoUsuario;
+      const usuario: UsuarioSessao = {
+        id: data.id,
+        nome: data.nome,
+        email: data.email,
+        matricula: data.matricula,
+        tipo,
+      };
+      setUsuario(usuario);
       navigate("/");
     } catch (err) {
       if (axios.isAxiosError(err) && err.response?.status === 401) {
@@ -99,7 +104,8 @@ export function Login() {
               Entrar
             </h1>
             <p className="text-sm text-minerva-cinza-escuro/70">
-              Use a matrícula gerada no cadastro e sua senha.
+              Alunos e professores usam a matrícula do cadastro. Secretaria usa{" "}
+              <span className="font-mono text-primary">SECRETARIA.0001</span>.
             </p>
           </div>
 

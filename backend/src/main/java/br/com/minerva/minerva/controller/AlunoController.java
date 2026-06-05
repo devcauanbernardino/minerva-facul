@@ -18,6 +18,16 @@ public class AlunoController {
     @GetMapping
     public ResponseEntity<List<AlunoResponse>> listar() { return ResponseEntity.ok(alunoService.listarTodos()); }
 
+    @GetMapping("/boletim")
+    public ResponseEntity<BoletimResponse> boletim(@RequestParam String email) {
+        return ResponseEntity.ok(alunoService.obterBoletimPorEmail(email));
+    }
+
+    @GetMapping("/historico")
+    public ResponseEntity<HistoricoResponse> historico(@RequestParam String email) {
+        return ResponseEntity.ok(alunoService.obterHistoricoPorEmail(email));
+    }
+
     @GetMapping("/{id}")
     public ResponseEntity<AlunoResponse> buscarPorId(@PathVariable Long id) { return ResponseEntity.ok(alunoService.buscarPorId(id)); }
 
