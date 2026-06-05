@@ -1,5 +1,6 @@
 package br.com.minerva.minerva.dto;
 
+import java.util.List;
 import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
@@ -7,11 +8,10 @@ import lombok.NoArgsConstructor;
 @Data
 @NoArgsConstructor
 @AllArgsConstructor
-public class LoginResponse {
-
-	private Long id;
+public class BoletimResponse {
 	private String nome;
 	private String email;
-	private String matricula;
-	private String tipo; // ALUNO, PROFESSOR ou SECRETARIA
+	private String cursoNome;
+	private Boolean bolsa;
+	private List<DisciplinaAcademicaResponse> disciplinas;
 }
