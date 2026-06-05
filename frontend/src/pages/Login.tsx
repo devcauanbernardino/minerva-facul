@@ -3,7 +3,6 @@ import { Link, useLocation, useNavigate } from "react-router-dom";
 import axios from "axios";
 import { api } from "../services/api";
 import { normalizarMatricula } from "../utils/matricula";
-import { EyeIcon, EyeSlashIcon } from "@heroicons/react/24/outline";
 
 type LoginLocationState = {
   matricula?: string;
@@ -178,11 +177,6 @@ export function Login() {
                   aria-label={showPassword ? "Ocultar senha" : "Mostrar senha"}
                   className="absolute right-0 top-0 bottom-0 flex items-center justify-center w-10 rounded-r-lg text-primary hover:bg-minerva-cinza-claro"
                 >
-                  {showPassword ? (
-                    <EyeSlashIcon className="h-5 w-5" />
-                  ) : (
-                    <EyeIcon className="h-5 w-5" />
-                  )}
                 </button>
               </div>
             </div>
