@@ -14,6 +14,7 @@ import org.springframework.web.multipart.MultipartFile;
 
 import br.com.minerva.minerva.dto.CadastroRequest;
 import br.com.minerva.minerva.dto.LoginRequest;
+import br.com.minerva.minerva.dto.LoginResponse;
 import br.com.minerva.minerva.dto.UsuarioResponse;
 import br.com.minerva.minerva.service.UsuarioService;
 import jakarta.validation.Valid;
@@ -60,7 +61,7 @@ public class AuthController {
     }
 
     @PostMapping("/login")
-    public ResponseEntity<UsuarioResponse> login(@Valid @RequestBody LoginRequest request) {
+    public ResponseEntity<LoginResponse> login(@Valid @RequestBody LoginRequest request) {
         return ResponseEntity.ok(usuarioService.login(request));
     }
 }

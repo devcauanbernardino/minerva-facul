@@ -8,4 +8,5 @@ import br.com.minerva.minerva.model.Matricula;
 @Repository
 public interface MatriculaRepository extends JpaRepository<Matricula, Long> {
 
+	java.util.List<Matricula> findByAlunoId(Long alunoId);
 }
