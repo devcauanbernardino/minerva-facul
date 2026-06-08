@@ -5,10 +5,36 @@ import { api } from "../services/api";
 import type { TipoUsuario, UsuarioSessao } from "../types/auth";
 import { getUsuario, setUsuario } from "../utils/auth";
 import { normalizarMatricula } from "../utils/matricula";
+import { EyeIcon, EyeSlashIcon } from "@heroicons/react/24/outline";
+import { MinervaLogo } from "../components/MinervaLogo";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+import { Card, CardContent } from "@/components/ui/card";
+import { Alert, AlertDescription } from "@/components/ui/alert";
+import { Separator } from "@/components/ui/separator";
 
 type LoginLocationState = {
   matricula?: string;
 };
+
+const CONTAS_DEMO = [
+  {
+    label: "Aluno Ana",
+    matricula: "2026.06.08.100201",
+    senha: "demo123",
+  },
+  {
+    label: "Prof. Marina",
+    matricula: "2026.06.08.100101",
+    senha: "demo123",
+  },
+  {
+    label: "Secretaria",
+    matricula: "SECRETARIA.0001",
+    senha: "secretaria123",
+  },
+] as const;
 
 export function Login() {
   const location = useLocation();
@@ -65,7 +91,7 @@ export function Login() {
   return (
     <div className="min-h-screen grid md:grid-cols-[45%_55%] bg-minerva-cinza-claro">
       <aside
-        className="relative hidden md:flex flex-col justify-between overflow-hidden bg-primary p-12 text-minerva-marmore"
+        className="relative hidden md:flex flex-col justify-end overflow-hidden bg-primary p-12 text-minerva-marmore"
         style={{
           backgroundImage: "url(/minerva-login-side.png)",
           backgroundSize: "cover",
@@ -74,69 +100,89 @@ export function Login() {
       >
         <div className="absolute inset-0 bg-gradient-to-b from-primary/85 via-primary/65 to-primary/90" />
 
-        <div className="relative z-10">
-          <p className="font-display text-5xl tracking-wide">Minerva</p>
-          <p className="mt-2 text-xs uppercase tracking-[0.3em] text-accent">
-            Gestão Academia
-          </p>
-        </div>
-
         <div className="relative z-10 space-y-4">
           <h2 className="font-display text-3xl leading-snug">
-            <span className="text-accent">Gestão com sabedoria.</span>
+            <span className="text-minerva-dourado">Gestão com sabedoria.</span>
             <br />
             Resultados que conquistam.
           </h2>
-          <div className="h-px w-16 bg-accent" />
-          <p className="text-xs uppercase tracking-[0.3em] text-accent/90">
+          <div className="h-px w-16 bg-minerva-dourado" />
+          <p className="text-xs uppercase tracking-[0.3em] text-minerva-dourado/90">
             Sabedoria · Estratégia · Resultados
           </p>
         </div>
       </aside>
 
-      <section className="flex items-center justify-center p-6">
-        <div className="w-full max-w-md space-y-6 rounded-2xl bg-minerva-marmore p-8 shadow-lg shadow-minerva-cinza-escuro/10 md:p-10">
+      <section className="flex flex-col items-center justify-center p-6">
+        <div className="mb-6 md:hidden">
+          <MinervaLogo variant="md" linkToHome showWordmark />
+        </div>
+        <div className="w-full max-w-md">
+          <Card className="shadow-lg">
+            <CardContent className="space-y-6 p-8 md:p-10">
+          <div className="hidden justify-center md:flex">
+            <MinervaLogo variant="sm" showWordmark />
+          </div>
           <div className="space-y-2">
-            <p className="text-xs font-semibold uppercase tracking-[0.25em] text-accent">
+            <p className="text-xs font-semibold uppercase tracking-[0.25em] text-minerva-dourado">
               Acesso ao sistema
             </p>
-            <h1 className="font-display text-3xl text-minerva-cinza-escuro">
+            <h1 className="font-display text-3xl">
               Entrar
             </h1>
-            <p className="text-sm text-minerva-cinza-escuro/70">
-              Alunos e professores usam a matrícula do cadastro. Secretaria usa{" "}
-              <span className="font-mono text-primary">SECRETARIA.0001</span>.
+            <p className="text-sm text-muted-foreground">
+              Use a <strong>matrícula</strong> (não o e-mail). Contas que você
+              cadastrou usam a senha definida no cadastro — não{" "}
+              <span className="font-mono">demo123</span>.
             </p>
           </div>
 
-          {matriculaNova ? (
-            <p
-              className="rounded-lg border border-primary/20 bg-primary/5 px-3 py-2 text-sm text-minerva-cinza-escuro"
-              role="status"
-            >
-              Cadastro concluído. Sua matrícula:{" "}
-              <strong className="font-mono text-primary">{matriculaNova}</strong>
+          <div className="rounded-lg border border-dashed border-primary/25 bg-primary/5 p-4 space-y-3">
+            <p className="text-xs font-semibold uppercase tracking-[0.2em] text-minerva-dourado">
+              Contas de demonstração
             </p>
+            <p className="text-xs text-muted-foreground">
+              Clique para preencher matrícula e senha automaticamente.
+            </p>
+            <div className="flex flex-wrap gap-2">
+              {CONTAS_DEMO.map((conta) => (
+                <Button
+                  key={conta.matricula}
+                  type="button"
+                  variant="outline"
+                  size="sm"
+                  className="font-normal"
+                  onClick={() => {
+                    setMatricula(conta.matricula);
+                    setPassword(conta.senha);
+                    setErro(null);
+                  }}
+                >
+                  {conta.label}
+                </Button>
+              ))}
+            </div>
+          </div>
+
+          {matriculaNova ? (
+            <Alert className="border-primary/20 bg-primary/5" role="status">
+              <AlertDescription>
+                Cadastro concluído. Sua matrícula:{" "}
+                <strong className="font-mono text-primary">{matriculaNova}</strong>
+              </AlertDescription>
+            </Alert>
           ) : null}
 
           {erro ? (
-            <p
-              className="rounded-lg border border-red-200 bg-red-50 px-3 py-2 text-sm text-red-800"
-              role="alert"
-            >
-              {erro}
-            </p>
+            <Alert variant="destructive" className="border-destructive/30 bg-destructive/5" role="alert">
+              <AlertDescription className="text-destructive">{erro}</AlertDescription>
+            </Alert>
           ) : null}
 
           <form onSubmit={handleSubmit} className="space-y-4">
-            <div className="space-y-1.5">
-              <label
-                htmlFor="matricula"
-                className="text-sm font-medium text-minerva-cinza-escuro"
-              >
-                Matrícula
-              </label>
-              <input
+            <div className="space-y-2">
+              <Label htmlFor="matricula">Matrícula</Label>
+              <Input
                 id="matricula"
                 type="text"
                 required
@@ -144,21 +190,16 @@ export function Login() {
                 value={matricula}
                 onChange={(e) => setMatricula(e.target.value)}
                 placeholder="2026.05.25.143052"
-                className="w-full rounded-lg border border-minerva-cinza-escuro/15 bg-minerva-marmore px-4 py-2.5 font-mono text-minerva-cinza-escuro placeholder:text-minerva-cinza-escuro/40 outline-none transition focus:border-primary focus:ring-2 focus:ring-primary/20"
+                className="h-10 font-mono"
               />
-              <p className="text-xs text-minerva-cinza-escuro/60">
+              <p className="text-xs text-muted-foreground">
                 Formato: AAAA.MM.DD.HHmmss (gerada automaticamente no cadastro)
               </p>
             </div>
 
-            <div className="space-y-1.5">
+            <div className="space-y-2">
               <div className="flex items-center justify-between">
-                <label
-                  htmlFor="senha"
-                  className="text-sm font-medium text-minerva-cinza-escuro"
-                >
-                  Senha
-                </label>
+                <Label htmlFor="senha">Senha</Label>
                 <a
                   href="#"
                   className="text-xs font-semibold text-primary hover:underline"
@@ -167,7 +208,7 @@ export function Login() {
                 </a>
               </div>
               <div className="relative">
-                <input
+                <Input
                   id="senha"
                   type={showPassword ? "text" : "password"}
                   required
@@ -175,37 +216,44 @@ export function Login() {
                   value={password}
                   onChange={(e) => setPassword(e.target.value)}
                   placeholder="••••••••"
-                  className="w-full rounded-lg border border-minerva-cinza-escuro/15 bg-minerva-marmore px-4 py-2.5 pr-10 text-minerva-cinza-escuro placeholder:text-minerva-cinza-escuro/40 outline-none transition focus:border-primary focus:ring-2 focus:ring-primary/20"
+                  className="h-10 pr-10"
                 />
-                <button
+                <Button
                   type="button"
+                  variant="ghost"
+                  size="icon-sm"
                   onClick={() => setShowPassword((prev) => !prev)}
                   aria-label={showPassword ? "Ocultar senha" : "Mostrar senha"}
-                  className="absolute right-0 top-0 bottom-0 flex items-center justify-center w-10 rounded-r-lg text-primary hover:bg-minerva-cinza-claro"
+                  className="absolute right-0 top-0 h-10 w-10 text-primary hover:bg-muted"
                 >
-                </button>
+                  {showPassword ? (
+                    <EyeSlashIcon className="h-5 w-5" />
+                  ) : (
+                    <EyeIcon className="h-5 w-5" />
+                  )}
+                </Button>
               </div>
             </div>
 
-            <label className="flex items-center gap-2 text-sm text-minerva-cinza-escuro/80">
+            <label className="flex items-center gap-2 text-sm text-muted-foreground">
               <input
                 type="checkbox"
-                className="h-4 w-4 accent-[var(--color-primary)]"
+                className="h-4 w-4 accent-primary"
               />
               Manter conectado
             </label>
 
-            <button
+            <Button
               type="submit"
               disabled={enviando}
-              className="w-full rounded-lg bg-primary py-3 font-semibold uppercase tracking-[0.15em] text-minerva-marmore transition hover:bg-primary/90 active:bg-primary/80 disabled:opacity-60"
+              className="h-11 w-full uppercase tracking-[0.15em]"
             >
               {enviando ? "Entrando..." : "Entrar"}
-            </button>
+            </Button>
           </form>
           <div className="space-y-3">
-            <hr className="border-minerva-cinza-escuro/10" />
-            <p className="text-center text-xs text-minerva-cinza-escuro/60">
+            <Separator />
+            <p className="text-center text-xs text-muted-foreground">
               Não tem conta?{" "}
               <Link
                 to="/cadastro"
@@ -215,6 +263,8 @@ export function Login() {
               </Link>
             </p>
           </div>
+            </CardContent>
+          </Card>
         </div>
       </section>
     </div>

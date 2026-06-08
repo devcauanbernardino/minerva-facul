@@ -3,4 +3,5 @@ export type Professor = {
   nome: string
   email: string
   especialidade?: string
+  materiaIds?: number[]
 }

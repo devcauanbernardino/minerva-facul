@@ -1,5 +1,6 @@
 package br.com.minerva.minerva.dto;
 
+import java.util.List;
 import lombok.*;
 
 @Data
@@ -10,4 +11,5 @@ public class ProfessorResponse {
     private String nome;
     private String email;
     private String especialidade;
+    private List<Long> materiaIds;
 }

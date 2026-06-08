@@ -2,6 +2,8 @@ package br.com.minerva.minerva.controller;
 
 import java.net.URI;
 
+import java.util.List;
+
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.PostMapping;
@@ -43,6 +45,7 @@ public class AuthController {
             @RequestParam String tipo,
             @RequestParam(required = false) String curso,
             @RequestParam(required = false) Boolean bolsista,
+            @RequestParam(required = false) List<Long> materiaIds,
             @RequestPart("especialidadeDoc") MultipartFile especialidadeDoc) {
 
         CadastroRequest request = new CadastroRequest();
@@ -54,6 +57,7 @@ public class AuthController {
         request.setCurso(curso);
         request.setBolsista(bolsista);
         request.setEspecialidade(especialidadeDoc.getOriginalFilename());
+        request.setMateriaIds(materiaIds);
 
         UsuarioResponse criado = usuarioService.cadastrar(request);
         URI location = URI.create("/auth/usuarios/" + criado.getId());

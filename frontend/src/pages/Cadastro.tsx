@@ -4,6 +4,9 @@ import axios from "axios";
 import { api } from "../services/api";
 import { gerarMatricula } from "../utils/matricula";
 import type { Curso } from "../types/curso";
+import type { Materia } from "../types/materia";
+import { EyeIcon, EyeSlashIcon } from "@heroicons/react/24/outline";
+import { MinervaLogo } from "../components/MinervaLogo";
 
 export function Cadastro() {
   const [nome, setNome] = useState("");
@@ -16,35 +19,51 @@ export function Cadastro() {
   const [curso, setCurso] = useState("");
   const [bolsista, setBolsista] = useState(false);
   const [especialidadeDoc, setEspecialidadeDoc] = useState<File | null>(null);
+  const [materiaIds, setMateriaIds] = useState<number[]>([]);
   const [cursos, setCursos] = useState<Curso[]>([]);
+  const [materias, setMaterias] = useState<Materia[]>([]);
   const [carregandoCursos, setCarregandoCursos] = useState(true);
+  const [carregandoMaterias, setCarregandoMaterias] = useState(true);
   const [erroCursos, setErroCursos] = useState<string | null>(null);
+  const [erroMaterias, setErroMaterias] = useState<string | null>(null);
   const [erro, setErro] = useState<string | null>(null);
   const [enviando, setEnviando] = useState(false);
   const navigate = useNavigate();
 
   useEffect(() => {
     let ativo = true;
-    api
-      .get<Curso[]>("/cursos")
-      .then((res) => {
+    Promise.all([api.get<Curso[]>("/cursos"), api.get<Materia[]>("/materias")])
+      .then(([cursosRes, materiasRes]) => {
         if (!ativo) return;
-        setCursos(res.data);
+        setCursos(cursosRes.data);
+        setMaterias(materiasRes.data);
         setErroCursos(null);
+        setErroMaterias(null);
       })
       .catch(() => {
         if (!ativo) return;
         setErroCursos(
           "Não foi possível carregar os cursos. Verifique se o backend está na porta 8080.",
         );
+        setErroMaterias(
+          "Não foi possível carregar as matérias. Verifique se o backend está na porta 8080.",
+        );
       })
       .finally(() => {
-        if (ativo) setCarregandoCursos(false);
+        if (!ativo) return;
+        setCarregandoCursos(false);
+        setCarregandoMaterias(false);
       });
     return () => {
       ativo = false;
     };
   }, []);
+
+  function toggleMateria(id: number) {
+    setMateriaIds((prev) =>
+      prev.includes(id) ? prev.filter((mId) => mId !== id) : [...prev, id],
+    );
+  }
 
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
@@ -63,7 +82,11 @@ export function Cadastro() {
       return;
     }
     if (isProfessor && especialidadeDoc === null) {
-      setErro("Informe a especialidade do professor.");
+      setErro("Informe o comprovante de especialidade do professor.");
+      return;
+    }
+    if (isProfessor && materiaIds.length === 0) {
+      setErro("Selecione ao menos uma matéria que você leciona.");
       return;
     }
 
@@ -79,6 +102,9 @@ export function Cadastro() {
         formData.append("senha", senha);
         formData.append("tipo", "PROFESSOR");
         formData.append("especialidadeDoc", especialidadeDoc!);
+        for (const id of materiaIds) {
+          formData.append("materiaIds", String(id));
+        }
 
         await api.post("/auth/cadastro", formData);
       } else {
@@ -99,7 +125,8 @@ export function Cadastro() {
         const data = err.response.data as { mensagem?: string };
         setErro(data.mensagem ?? "Este e-mail já está cadastrado.");
       } else if (axios.isAxiosError(err) && err.response?.status === 400) {
-        setErro("Verifique os dados informados.");
+        const data = err.response.data as { mensagem?: string };
+        setErro(data.mensagem ?? "Verifique os dados informados.");
       } else {
         setErro(
           "Não foi possível cadastrar. O backend está rodando na porta 8080?",
@@ -113,7 +140,7 @@ export function Cadastro() {
   return (
     <div className="min-h-screen grid md:grid-cols-[45%_55%] bg-minerva-cinza-claro">
       <aside
-        className="relative hidden md:flex flex-col justify-between overflow-hidden bg-primary p-12 text-minerva-marmore"
+        className="relative hidden md:flex flex-col justify-end overflow-hidden bg-primary p-12 text-minerva-marmore"
         style={{
           backgroundImage: "url(/minerva-login-side.png)",
           backgroundSize: "cover",
@@ -122,30 +149,29 @@ export function Cadastro() {
       >
         <div className="absolute inset-0 bg-gradient-to-b from-primary/85 via-primary/65 to-primary/90" />
 
-        <div className="relative z-10">
-          <p className="font-display text-5xl tracking-wide">Minerva</p>
-          <p className="mt-2 text-xs uppercase tracking-[0.3em] text-accent">
-            Gestão Academia
-          </p>
-        </div>
-
         <div className="relative z-10 space-y-4">
           <h2 className="font-display text-3xl leading-snug">
-            <span className="text-accent">Comece por aqui.</span>
+            <span className="text-minerva-dourado">Comece por aqui.</span>
             <br />
             Crie sua conta em poucos passos.
           </h2>
-          <div className="h-px w-16 bg-accent" />
-          <p className="text-xs uppercase tracking-[0.3em] text-accent/90">
+          <div className="h-px w-16 bg-minerva-dourado" />
+          <p className="text-xs uppercase tracking-[0.3em] text-minerva-dourado/90">
             Sabedoria · Estratégia · Resultados
           </p>
         </div>
       </aside>
 
-      <section className="flex items-center justify-center p-6">
-        <div className="w-full max-w-md space-y-6 rounded-2xl bg-minerva-marmore p-8 shadow-lg shadow-minerva-cinza-escuro/10 md:p-10">
+      <section className="flex flex-col items-center justify-center p-6">
+        <div className="mb-6 md:hidden">
+          <MinervaLogo variant="md" linkToHome showWordmark />
+        </div>
+        <div className="w-full max-w-lg space-y-6 rounded-2xl bg-minerva-marmore p-8 shadow-lg shadow-minerva-cinza-escuro/10 md:p-10">
+          <div className="hidden justify-center md:flex">
+            <MinervaLogo variant="sm" showWordmark />
+          </div>
           <div className="space-y-2">
-            <p className="text-xs font-semibold uppercase tracking-[0.25em] text-accent">
+            <p className="text-xs font-semibold uppercase tracking-[0.25em] text-minerva-dourado">
               Nova conta
             </p>
             <h1 className="font-display text-3xl text-minerva-cinza-escuro">
@@ -174,6 +200,7 @@ export function Cadastro() {
                   onChange={(e) => {
                     setIsProfessor(e.target.checked);
                     setEspecialidadeDoc(null);
+                    setMateriaIds([]);
                   }}
                 />
                 Sou professor
@@ -333,12 +360,55 @@ export function Cadastro() {
               </div>
             ) : (
               <div className="space-y-4 rounded-2xl border border-minerva-cinza-escuro/10 bg-white/80 p-4 shadow-sm shadow-minerva-cinza-escuro/5">
+                <p className="text-sm font-semibold text-minerva-cinza-escuro">
+                  Dados do professor
+                </p>
+                <div className="space-y-2">
+                  <p className="text-sm font-medium text-minerva-cinza-escuro">
+                    Matérias que você leciona
+                  </p>
+                  <p className="text-xs text-minerva-cinza-escuro/65">
+                    Selecione uma ou mais disciplinas. Elas aparecerão nas suas turmas ao
+                    matricular alunos.
+                  </p>
+                  {carregandoMaterias ? (
+                    <p className="text-sm text-minerva-cinza-escuro/60">Carregando matérias…</p>
+                  ) : erroMaterias ? (
+                    <p className="text-xs text-red-700">{erroMaterias}</p>
+                  ) : materias.length === 0 ? (
+                    <p className="text-xs text-minerva-cinza-escuro/60">
+                      Nenhuma matéria cadastrada. Peça à secretaria cadastrar disciplinas antes.
+                    </p>
+                  ) : (
+                    <div className="max-h-44 space-y-2 overflow-y-auto rounded-lg border border-minerva-cinza-escuro/10 p-2">
+                      {materias.map((m) => (
+                        <label
+                          key={m.id}
+                          className="flex cursor-pointer items-center gap-2 rounded-md px-2 py-1.5 text-sm hover:bg-minerva-cinza-claro"
+                        >
+                          <input
+                            type="checkbox"
+                            checked={materiaIds.includes(m.id)}
+                            onChange={() => toggleMateria(m.id)}
+                            className="accent-primary"
+                          />
+                          <span>
+                            {m.nome}
+                            <span className="ml-1 text-minerva-cinza-escuro/50">
+                              ({m.cursoNome})
+                            </span>
+                          </span>
+                        </label>
+                      ))}
+                    </div>
+                  )}
+                </div>
                 <div className="space-y-1.5">
                   <label
                     htmlFor="cadastro-especialidade"
                     className="text-sm font-medium text-minerva-cinza-escuro"
                   >
-                    Especialidade
+                    Comprovante de especialidade
                   </label>
                   <div className="flex flex-col gap-2">
                     <label

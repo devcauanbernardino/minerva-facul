@@ -57,12 +57,26 @@ public class ProfessorService {
         professorRepository.delete(buscarEntidade(id));
     }
 
+    @Transactional
+    public Professor garantirProfessorDeUsuario(Usuario usuario) {
+        return professorRepository.findByEmail(usuario.getEmail())
+            .orElseGet(() -> {
+                Professor professor = new Professor();
+                professor.setNome(usuario.getNome());
+                professor.setEmail(usuario.getEmail());
+                professor.setSenha(usuario.getSenha());
+                professor.setEspecialidade(usuario.getEspecialidade());
+                return professorRepository.save(professor);
+            });
+    }
+
     private Professor buscarEntidade(Long id) {
         return professorRepository.findById(id)
             .orElseThrow(() -> new RecursoNaoEncontradoException("Professor não encontrado com id: " + id));
     }
 
     private ProfessorResponse paraResponse(Professor p) {
-        return new ProfessorResponse(p.getId(), p.getNome(), p.getEmail(), p.getEspecialidade());
+        List<Long> materiaIds = p.getMaterias().stream().map(Materia::getId).toList();
+        return new ProfessorResponse(p.getId(), p.getNome(), p.getEmail(), p.getEspecialidade(), materiaIds);
     }
 }

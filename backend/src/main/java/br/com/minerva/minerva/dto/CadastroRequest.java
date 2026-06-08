@@ -1,5 +1,6 @@
 package br.com.minerva.minerva.dto;
 
+import java.util.List;
 import jakarta.validation.constraints.Email;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.Size;
@@ -30,4 +31,5 @@ public class CadastroRequest {
 	private String curso;
 	private Boolean bolsista;
 	private String especialidade;
+	private List<Long> materiaIds;
 }
