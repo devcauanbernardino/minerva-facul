@@ -2,7 +2,6 @@ package br.com.minerva.minerva.repository;
 
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.stereotype.Repository;
-
 import br.com.minerva.minerva.model.Materia;
 
 @Repository

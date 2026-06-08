@@ -1,7 +1,9 @@
 package br.com.minerva.minerva.controller;
 
+import java.net.URI;
 import java.util.List;
-import org.springframework.http.HttpStatus;
+
+import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
@@ -17,6 +19,7 @@ import br.com.minerva.minerva.dto.ProfessorMateriaRequest;
 import br.com.minerva.minerva.dto.ProfessorRequest;
 import br.com.minerva.minerva.dto.ProfessorResponse;
 import br.com.minerva.minerva.service.ProfessorService;
+
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 
@@ -25,12 +28,17 @@ import lombok.RequiredArgsConstructor;
 @RequiredArgsConstructor
 public class ProfessorController {
 
-	private final ProfessorService professorService;
+    private final ProfessorService professorService;
 
-	@GetMapping
-	public List<ProfessorResponse> listarTodos() {
-		return professorService.listarTodos();
-	}
+    @GetMapping
+    public ResponseEntity<List<ProfessorResponse>> listar() {
+        return ResponseEntity.ok(professorService.listarTodos());
+    }
+
+    @GetMapping("/{id}")
+    public ResponseEntity<ProfessorResponse> buscarPorId(@PathVariable Long id) {
+        return ResponseEntity.ok(professorService.buscarPorId(id));
+    }
 
 	@GetMapping("/turmas")
 	public List<MatriculaResponse> listarTurmas(@RequestParam String email) {

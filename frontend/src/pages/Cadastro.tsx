@@ -269,11 +269,6 @@ export function Cadastro() {
                   aria-label={showSenha ? "Ocultar senha" : "Mostrar senha"}
                   className="absolute right-0 top-0 bottom-0 flex items-center justify-center w-10 text-primary hover:bg-minerva-cinza-claro rounded-r-lg"
                 >
-                  {showSenha ? (
-                    <EyeSlashIcon className="h-5 w-5" />
-                  ) : (
-                    <EyeIcon className="h-5 w-5" />
-                  )}
                 </button>
               </div>
             </div>
@@ -306,11 +301,6 @@ export function Cadastro() {
                   }
                   className="absolute right-0 top-0 bottom-0 flex items-center justify-center w-10 text-primary hover:bg-minerva-cinza-claro rounded-r-lg"
                 >
-                  {showConfirmarSenha ? (
-                    <EyeSlashIcon className="h-5 w-5" />
-                  ) : (
-                    <EyeIcon className="h-5 w-5" />
-                  )}
                 </button>
               </div>
             </div>
