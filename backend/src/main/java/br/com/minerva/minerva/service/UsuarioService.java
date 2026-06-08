@@ -20,6 +20,7 @@ public class UsuarioService {
 
 	private final UsuarioRepository usuarioRepository;
 	private final AlunoService alunoService;
+	private final ProfessorService professorService;
 	private final PasswordEncoder passwordEncoder;
 
 	@Transactional
@@ -49,6 +50,9 @@ public class UsuarioService {
 		if ("ALUNO".equals(salvo.getTipo())) {
 			alunoService.garantirAlunoDeUsuario(salvo);
 		}
+		if ("PROFESSOR".equals(salvo.getTipo())) {
+			professorService.garantirProfessorDeUsuario(salvo);
+		}
 		return paraResponse(salvo);
 	}
 
@@ -64,6 +68,9 @@ public class UsuarioService {
 
 		if ("ALUNO".equals(resolverTipo(usuario))) {
 			alunoService.garantirAlunoDeUsuario(usuario);
+		}
+		if ("PROFESSOR".equals(resolverTipo(usuario))) {
+			professorService.garantirProfessorDeUsuario(usuario);
 		}
 
 		return paraLoginResponse(usuario);

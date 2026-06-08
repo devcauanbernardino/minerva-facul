@@ -1,49 +1,80 @@
 import { Link } from 'react-router-dom'
+import { AlertCircle, CheckCircle2, Info } from 'lucide-react'
+import { Button } from '@/components/ui/button'
+import { Alert, AlertDescription } from '@/components/ui/alert'
+import { Separator } from '@/components/ui/separator'
+import { cn } from '@/lib/utils'
 
 type PageHeaderProps = {
   titulo: string
   subtitulo?: string
+  acao?: React.ReactNode
 }
 
-export function PageHeader({ titulo, subtitulo }: PageHeaderProps) {
+export function PageHeader({ titulo, subtitulo, acao }: PageHeaderProps) {
   return (
     <div className="mb-8 flex flex-wrap items-start justify-between gap-4">
-      <div className="space-y-1">
-        <h1 className="font-display text-2xl font-bold text-minerva-cinza-escuro">
+      <div className="space-y-2">
+        <p className="text-xs font-semibold uppercase tracking-[0.2em] text-minerva-dourado">
+          Minerva
+        </p>
+        <h1 className="font-display text-2xl font-bold tracking-tight sm:text-3xl">
           {titulo}
         </h1>
         {subtitulo ? (
-          <p className="text-sm text-minerva-cinza-escuro/70">{subtitulo}</p>
+          <p className="max-w-2xl text-sm leading-relaxed text-muted-foreground">
+            {subtitulo}
+          </p>
         ) : null}
       </div>
-      <Link
-        to="/"
-        className="text-sm font-semibold text-primary underline-offset-4 hover:underline"
-      >
-        ← Início
-      </Link>
+      <div className="flex flex-wrap items-center gap-3">
+        {acao}
+        <Button variant="outline" size="sm" asChild>
+          <Link to="/" className="no-underline hover:no-underline">
+            ← Início
+          </Link>
+        </Button>
+      </div>
+      <Separator className="basis-full" />
     </div>
   )
 }
 
 export function AlertaErro({ mensagem }: { mensagem: string }) {
   return (
-    <div
-      className="mb-6 rounded-lg border border-primary/25 bg-primary/[0.06] px-4 py-3 text-sm text-minerva-cinza-escuro"
+    <Alert
+      variant="destructive"
+      className="mb-6 border-destructive/30 bg-destructive/5"
       role="alert"
     >
-      {mensagem}
-    </div>
+      <AlertCircle />
+      <AlertDescription className="text-destructive">{mensagem}</AlertDescription>
+    </Alert>
   )
 }
 
 export function AlertaSucesso({ mensagem }: { mensagem: string }) {
   return (
-    <div
-      className="mb-6 rounded-lg border border-emerald-200 bg-emerald-50 px-4 py-3 text-sm text-emerald-900"
+    <Alert
+      className="mb-6 border-emerald-200 bg-emerald-50 text-emerald-900"
       role="status"
     >
-      {mensagem}
-    </div>
+      <CheckCircle2 className="text-emerald-600" />
+      <AlertDescription className="text-emerald-900">{mensagem}</AlertDescription>
+    </Alert>
+  )
+}
+
+export function AlertaInfo({ mensagem }: { mensagem: string }) {
+  return (
+    <Alert
+      className={cn(
+        'mb-6 border-minerva-dourado/30 bg-minerva-dourado/10 text-foreground'
+      )}
+      role="status"
+    >
+      <Info className="text-minerva-dourado" />
+      <AlertDescription>{mensagem}</AlertDescription>
+    </Alert>
   )
 }
