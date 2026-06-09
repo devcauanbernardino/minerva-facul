@@ -25,6 +25,12 @@ public class Matricula {
     @Column(nullable = false)
     private LocalDate dataCriacao = LocalDate.now();
 
+    @Column
+    private Double nota;
+
+    @Column
+    private Double frequencia;
+
     @Column(name = "situacao")
     private String situacao = "ATIVA";
 }
