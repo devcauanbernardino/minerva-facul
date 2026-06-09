@@ -85,9 +85,9 @@ public class AlunoService {
     @Transactional
     public BoletimResponse obterBoletimPorEmail(String email) {
         Aluno aluno = buscarOuSincronizarPorEmail(email);
-        List<Matricula> matriculas = matriculaRepository.findByAlunoId(aluno.getId());
-        Map<Long, Matricula> matriculaPorMateria = new HashMap<>();
-        for (Matricula matricula : matriculas) {
+        List<MatriculaService> matriculas = matriculaRepository.findByAlunoId(aluno.getId());
+        Map<Long, MatriculaService> matriculaPorMateria = new HashMap<>();
+        for (MatriculaService matricula : matriculas) {
             matriculaPorMateria.put(matricula.getMateria().getId(), matricula);
         }
 
@@ -95,7 +95,7 @@ public class AlunoService {
             .findByCursoIdOrderByNomeAsc(aluno.getCurso().getId())
             .stream()
             .map(materia -> {
-                Matricula matricula = matriculaPorMateria.get(materia.getId());
+                MatriculaService matricula = matriculaPorMateria.get(materia.getId());
                 if (matricula == null) {
                     return new DisciplinaAcademicaResponse(
                         materia.getId(), materia.getNome(), "DISPONIVEL", null, null);
