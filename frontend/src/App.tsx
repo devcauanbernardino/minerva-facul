@@ -33,7 +33,7 @@ function AppShell() {
   return (
     <div className="flex min-h-screen flex-col bg-background">
       {showHeader && (
-        <header className="sticky top-0 z-40 border-b bg-card/95 shadow-sm backdrop-blur-md supports-[backdrop-filter]:bg-card/80">
+        <header className="sticky top-0 z-40 border-b border-b-minerva-dourado/25 bg-card/95 shadow-sm backdrop-blur-md supports-[backdrop-filter]:bg-card/80">
           <nav className="mx-auto flex max-w-6xl flex-wrap items-center gap-y-3 px-4 py-4 sm:gap-x-6 sm:px-6 lg:gap-x-8">
             <MinervaLogo variant="icon" linkToHome showWordmark className="mr-1 sm:mr-2" />
 

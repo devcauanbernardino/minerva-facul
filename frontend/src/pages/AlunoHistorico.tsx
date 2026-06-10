@@ -1,6 +1,16 @@
 import { useEffect, useMemo, useState } from 'react'
-import { BookOpenIcon } from '@heroicons/react/24/outline'
+import { Award, BookOpen, ScrollText } from 'lucide-react'
 import { AlertaErro, PageHeader } from '../components/PageHeader'
+import { Badge } from '@/components/ui/badge'
+import { Card, CardContent } from '@/components/ui/card'
+import {
+  Table,
+  TableBody,
+  TableCell,
+  TableHead,
+  TableHeader,
+  TableRow,
+} from '@/components/ui/table'
 import { BadgeSituacao } from '../components/ui/BadgeSituacao'
 import { EmptyState } from '../components/ui/EmptyState'
 import { LoadingState } from '../components/ui/LoadingState'
@@ -108,24 +118,34 @@ export function AlunoHistorico() {
 
       {historico ? (
         <div className="space-y-8">
-          <div className="minerva-card p-6">
-            <div className="flex flex-wrap items-start justify-between gap-4">
-              <div>
-                <p className="text-xs font-semibold uppercase tracking-wider text-minerva-dourado">
-                  Registro acadêmico
-                </p>
-                <h2 className="mt-1 font-display text-xl font-bold">{historico.nome}</h2>
-                <p className="mt-2 text-sm text-minerva-cinza-escuro/75">
-                  {historico.cursoNome}
-                  {historico.bolsa ? ' · Bolsista' : ''}
-                </p>
+          <Card>
+            <CardContent className="flex flex-wrap items-start justify-between gap-4 p-0">
+              <div className="flex items-start gap-4">
+                <div className="flex h-12 w-12 shrink-0 items-center justify-center rounded-xl bg-primary/10 text-primary">
+                  <ScrollText className="h-6 w-6" />
+                </div>
+                <div>
+                  <p className="text-xs font-semibold uppercase tracking-wider text-minerva-dourado">
+                    Registro acadêmico
+                  </p>
+                  <h2 className="mt-1 font-display text-xl font-bold">{historico.nome}</h2>
+                  <div className="mt-2 flex flex-wrap items-center gap-2">
+                    <p className="text-sm text-muted-foreground">{historico.cursoNome}</p>
+                    {historico.bolsa ? (
+                      <Badge className="gap-1 bg-minerva-dourado/15 text-yellow-800">
+                        <Award className="h-3 w-3" />
+                        Bolsista
+                      </Badge>
+                    ) : null}
+                  </div>
+                </div>
               </div>
-              <div className="rounded-lg bg-minerva-cinza-claro px-4 py-2 text-center">
-                <p className="text-xs text-minerva-cinza-escuro/60">Disciplinas no histórico</p>
+              <div className="rounded-lg bg-muted px-4 py-2 text-center">
+                <p className="text-xs text-muted-foreground">Disciplinas no histórico</p>
                 <p className="font-display text-2xl font-bold text-primary">{stats?.total ?? 0}</p>
               </div>
-            </div>
-          </div>
+            </CardContent>
+          </Card>
 
           {stats ? (
             <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
@@ -170,43 +190,45 @@ export function AlunoHistorico() {
             <EmptyState
               titulo="Histórico vazio"
               descricao="Quando você concluir, reprovar ou trancar disciplinas, elas aparecerão aqui automaticamente."
-              icone={<BookOpenIcon className="h-7 w-7" />}
+              icone={<BookOpen className="h-7 w-7" />}
             />
           ) : (
-            <div className="minerva-table-wrap overflow-x-auto">
-              <table className="minerva-table">
-                <thead>
-                  <tr>
-                    <th>Disciplina</th>
-                    <th>Situação</th>
-                    <th>Nota final</th>
-                    <th>Frequência</th>
-                  </tr>
-                </thead>
-                <tbody>
-                  {historico.disciplinas.map((d) => (
-                    <tr key={d.materiaId}>
-                      <td>
-                        <p className="font-medium">{d.materiaNome}</p>
-                        <p className="text-xs text-minerva-cinza-escuro/45">ID {d.materiaId}</p>
-                      </td>
-                      <td>
-                        <BadgeSituacao
-                          situacao={
-                            d.situacao === 'CONCLUIDA' ? 'APROVADA' : d.situacao
-                          }
-                        />
-                        <span className="sr-only">{labelSituacaoHistorico(d.situacao)}</span>
-                      </td>
-                      <td>
-                        <span className="font-semibold">{formatarNota(d.nota)}</span>
-                      </td>
-                      <td>{formatarFrequencia(d.frequencia)}</td>
-                    </tr>
-                  ))}
-                </tbody>
-              </table>
-            </div>
+            <Card className="gap-0 overflow-hidden p-0">
+              <CardContent className="p-0">
+                <Table>
+                  <TableHeader>
+                    <TableRow className="bg-muted/50 hover:bg-muted/50">
+                      <TableHead className="px-4">Disciplina</TableHead>
+                      <TableHead className="px-4">Situação</TableHead>
+                      <TableHead className="px-4">Nota final</TableHead>
+                      <TableHead className="px-4">Frequência</TableHead>
+                    </TableRow>
+                  </TableHeader>
+                  <TableBody>
+                    {historico.disciplinas.map((d) => (
+                      <TableRow key={d.materiaId}>
+                        <TableCell className="px-4 py-3">
+                          <p className="font-medium">{d.materiaNome}</p>
+                          <p className="text-xs text-muted-foreground">ID {d.materiaId}</p>
+                        </TableCell>
+                        <TableCell className="px-4 py-3">
+                          <BadgeSituacao
+                            situacao={d.situacao === 'CONCLUIDA' ? 'APROVADA' : d.situacao}
+                          />
+                          <span className="sr-only">{labelSituacaoHistorico(d.situacao)}</span>
+                        </TableCell>
+                        <TableCell className="px-4 py-3">
+                          <span className="font-semibold">{formatarNota(d.nota)}</span>
+                        </TableCell>
+                        <TableCell className="px-4 py-3">
+                          {formatarFrequencia(d.frequencia)}
+                        </TableCell>
+                      </TableRow>
+                    ))}
+                  </TableBody>
+                </Table>
+              </CardContent>
+            </Card>
           )}
         </div>
       ) : null}

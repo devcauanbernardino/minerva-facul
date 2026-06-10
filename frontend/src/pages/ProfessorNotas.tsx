@@ -1,6 +1,26 @@
 import { useCallback, useEffect, useMemo, useState } from 'react'
-import { PencilSquareIcon } from '@heroicons/react/24/outline'
+import { Info, PencilLine, Search } from 'lucide-react'
 import { AlertaErro, AlertaSucesso, PageHeader } from '../components/PageHeader'
+import { Button } from '@/components/ui/button'
+import { Card, CardContent } from '@/components/ui/card'
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+} from '@/components/ui/dialog'
+import { Input } from '@/components/ui/input'
+import { Label } from '@/components/ui/label'
+import {
+  Table,
+  TableBody,
+  TableCell,
+  TableHead,
+  TableHeader,
+  TableRow,
+} from '@/components/ui/table'
 import { BadgeSituacao } from '../components/ui/BadgeSituacao'
 import { EmptyState } from '../components/ui/EmptyState'
 import { LoadingState } from '../components/ui/LoadingState'
@@ -26,6 +46,8 @@ import {
 
 type EdicaoNotas = {
   matriculaId: number
+  alunoNome: string
+  materiaNome: string
   nota: string
   frequencia: string
 }
@@ -103,6 +125,8 @@ export function ProfessorNotas() {
   function iniciarEdicao(m: Matricula) {
     setEdicao({
       matriculaId: m.id,
+      alunoNome: m.alunoNome,
+      materiaNome: m.materiaNome,
       nota: m.nota != null ? String(m.nota) : '',
       frequencia: m.frequencia != null ? String(m.frequencia) : '',
     })
@@ -172,13 +196,17 @@ export function ProfessorNotas() {
         <StatCard titulo="Com nota" valor={stats.comNota} descricao="Lançamentos realizados" />
       </div>
 
-      <div className="mb-6 minerva-card p-5">
-        <p className="text-sm text-minerva-cinza-escuro/75">
-          <strong className="text-minerva-cinza-escuro">Como funciona:</strong> clique em{' '}
-          <em>Lançar notas</em> na linha do aluno, informe nota e frequência e salve. Apenas matrículas{' '}
-          <BadgeSituacao situacao="ATIVA" className="mx-1 align-middle" /> permitem lançamento.
-        </p>
-      </div>
+      <Card className="mb-6 border-minerva-dourado/30 bg-minerva-dourado/5 p-5">
+        <CardContent className="flex items-start gap-3 p-0 text-sm text-muted-foreground">
+          <Info className="mt-0.5 h-4 w-4 shrink-0 text-minerva-dourado" />
+          <p>
+            <strong className="text-foreground">Como funciona:</strong> clique em{' '}
+            <em>Lançar notas</em> na linha do aluno, informe nota e frequência e salve. Apenas
+            matrículas <BadgeSituacao situacao="ATIVA" className="mx-1 align-middle" /> permitem
+            lançamento.
+          </p>
+        </CardContent>
+      </Card>
 
       {(turmas?.length ?? 0) > 0 ? (
         <div className="mb-8 grid gap-8 sm:grid-cols-2 xl:grid-cols-3">
@@ -223,138 +251,144 @@ export function ProfessorNotas() {
       <div className="mb-4 flex flex-wrap items-end justify-between gap-4">
         <div>
           <h2 className="font-display text-lg font-semibold">Suas turmas</h2>
-          <p className="text-sm text-minerva-cinza-escuro/65">
+          <p className="text-sm text-muted-foreground">
             {turmasFiltradas.length} aluno(s) listado(s)
           </p>
         </div>
-        <input
-          type="search"
-          placeholder="Buscar aluno ou matéria…"
-          value={filtro}
-          onChange={(e) => setFiltro(e.target.value)}
-          className="minerva-input mt-0 w-full max-w-xs"
-        />
+        <div className="relative w-full max-w-xs">
+          <Search className="pointer-events-none absolute top-1/2 left-2.5 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
+          <Input
+            type="search"
+            placeholder="Buscar aluno ou matéria…"
+            value={filtro}
+            onChange={(e) => setFiltro(e.target.value)}
+            className="pl-8"
+          />
+        </div>
       </div>
 
       {turmasFiltradas.length === 0 ? (
         <EmptyState
           titulo="Nenhum aluno nas suas turmas"
           descricao="Peça à secretaria para vincular matérias ao seu cadastro de professor e matricular alunos."
-          icone={<PencilSquareIcon className="h-7 w-7" />}
+          icone={<PencilLine className="h-7 w-7" />}
         />
       ) : (
-        <div className="minerva-table-wrap overflow-x-auto">
-          <table className="minerva-table">
-            <thead>
-              <tr>
-                <th>Aluno</th>
-                <th>Matéria</th>
-                <th>Curso</th>
-                <th>Situação</th>
-                <th>Nota</th>
-                <th>Frequência</th>
-                <th>Ações</th>
-              </tr>
-            </thead>
-            <tbody>
-              {turmasFiltradas.map((t) => (
-                <tr key={t.id}>
-                  <td>
-                    <p className="font-medium">{t.alunoNome}</p>
-                    <p className="text-xs text-minerva-cinza-escuro/50">Matrícula #{t.id}</p>
-                  </td>
-                  <td>{t.materiaNome}</td>
-                  <td className="text-minerva-cinza-escuro/75">{t.cursoNome}</td>
-                  <td>
-                    <BadgeSituacao situacao={t.situacao} />
-                  </td>
-                  <td>
-                    {t.nota != null ? (
-                      <span className="font-semibold">{t.nota.toFixed(1)}</span>
-                    ) : (
-                      <span className="text-minerva-cinza-escuro/40">—</span>
-                    )}
-                  </td>
-                  <td>
-                    {t.frequencia != null ? (
-                      <span>{t.frequencia.toFixed(0)}%</span>
-                    ) : (
-                      <span className="text-minerva-cinza-escuro/40">—</span>
-                    )}
-                  </td>
-                  <td>
-                    {t.situacao === 'ATIVA' ? (
-                      <button
-                        type="button"
-                        onClick={() => iniciarEdicao(t)}
-                        className="text-sm font-semibold text-primary hover:underline"
-                      >
-                        Lançar notas
-                      </button>
-                    ) : (
-                      <span className="text-xs text-minerva-cinza-escuro/45">Encerrada</span>
-                    )}
-                  </td>
-                </tr>
-              ))}
-            </tbody>
-          </table>
-        </div>
+        <Card className="gap-0 overflow-hidden p-0">
+          <CardContent className="p-0">
+            <Table>
+              <TableHeader>
+                <TableRow className="bg-muted/50 hover:bg-muted/50">
+                  <TableHead className="px-4">Aluno</TableHead>
+                  <TableHead className="px-4">Matéria</TableHead>
+                  <TableHead className="px-4">Curso</TableHead>
+                  <TableHead className="px-4">Situação</TableHead>
+                  <TableHead className="px-4">Nota</TableHead>
+                  <TableHead className="px-4">Frequência</TableHead>
+                  <TableHead className="px-4 text-right">Ações</TableHead>
+                </TableRow>
+              </TableHeader>
+              <TableBody>
+                {turmasFiltradas.map((t) => (
+                  <TableRow key={t.id}>
+                    <TableCell className="px-4 py-3">
+                      <p className="font-medium">{t.alunoNome}</p>
+                      <p className="text-xs text-muted-foreground">Matrícula #{t.id}</p>
+                    </TableCell>
+                    <TableCell className="px-4 py-3">{t.materiaNome}</TableCell>
+                    <TableCell className="px-4 py-3 text-muted-foreground">{t.cursoNome}</TableCell>
+                    <TableCell className="px-4 py-3">
+                      <BadgeSituacao situacao={t.situacao} />
+                    </TableCell>
+                    <TableCell className="px-4 py-3">
+                      {t.nota != null ? (
+                        <span className="font-semibold">{t.nota.toFixed(1)}</span>
+                      ) : (
+                        <span className="text-muted-foreground/50">—</span>
+                      )}
+                    </TableCell>
+                    <TableCell className="px-4 py-3">
+                      {t.frequencia != null ? (
+                        <span>{t.frequencia.toFixed(0)}%</span>
+                      ) : (
+                        <span className="text-muted-foreground/50">—</span>
+                      )}
+                    </TableCell>
+                    <TableCell className="px-4 py-3 text-right">
+                      {t.situacao === 'ATIVA' ? (
+                        <Button
+                          type="button"
+                          variant="outline"
+                          size="sm"
+                          onClick={() => iniciarEdicao(t)}
+                        >
+                          <PencilLine />
+                          Lançar notas
+                        </Button>
+                      ) : (
+                        <span className="text-xs text-muted-foreground/60">Encerrada</span>
+                      )}
+                    </TableCell>
+                  </TableRow>
+                ))}
+              </TableBody>
+            </Table>
+          </CardContent>
+        </Card>
       )}
 
-      {edicao ? (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-minerva-cinza-escuro/40 p-4 backdrop-blur-sm">
-          <form
-            onSubmit={handleSalvarNotas}
-            className="w-full max-w-md minerva-card p-6 shadow-xl"
-          >
-            <h3 className="font-display text-lg font-semibold">Lançar notas</h3>
-            <p className="mt-1 text-sm text-minerva-cinza-escuro/65">
-              Matrícula #{edicao.matriculaId}
-            </p>
-            <div className="mt-5 grid gap-4 sm:grid-cols-2">
-              <div>
-                <label className="block text-sm font-medium">Nota (0–10)</label>
-                <input
-                  type="number"
-                  min={0}
-                  max={10}
-                  step={0.1}
-                  required
-                  value={edicao.nota}
-                  onChange={(e) => setEdicao({ ...edicao, nota: e.target.value })}
-                  className="minerva-input"
-                />
+      <Dialog open={edicao !== null} onOpenChange={(open) => !open && cancelarEdicao()}>
+        <DialogContent className="sm:max-w-md">
+          <DialogHeader>
+            <DialogTitle>Lançar notas</DialogTitle>
+            <DialogDescription>
+              {edicao
+                ? `${edicao.alunoNome} · ${edicao.materiaNome} · matrícula #${edicao.matriculaId}`
+                : null}
+            </DialogDescription>
+          </DialogHeader>
+          {edicao ? (
+            <form onSubmit={handleSalvarNotas} className="space-y-4">
+              <div className="grid gap-4 sm:grid-cols-2">
+                <div className="space-y-1.5">
+                  <Label htmlFor="nota">Nota (0–10)</Label>
+                  <Input
+                    id="nota"
+                    type="number"
+                    min={0}
+                    max={10}
+                    step={0.1}
+                    required
+                    value={edicao.nota}
+                    onChange={(e) => setEdicao({ ...edicao, nota: e.target.value })}
+                  />
+                </div>
+                <div className="space-y-1.5">
+                  <Label htmlFor="frequencia">Frequência (%)</Label>
+                  <Input
+                    id="frequencia"
+                    type="number"
+                    min={0}
+                    max={100}
+                    step={1}
+                    required
+                    value={edicao.frequencia}
+                    onChange={(e) => setEdicao({ ...edicao, frequencia: e.target.value })}
+                  />
+                </div>
               </div>
-              <div>
-                <label className="block text-sm font-medium">Frequência (%)</label>
-                <input
-                  type="number"
-                  min={0}
-                  max={100}
-                  step={1}
-                  required
-                  value={edicao.frequencia}
-                  onChange={(e) => setEdicao({ ...edicao, frequencia: e.target.value })}
-                  className="minerva-input"
-                />
-              </div>
-            </div>
-            <div className="mt-6 flex gap-3">
-              <button
-                type="submit"
-                disabled={salvandoId === edicao.matriculaId}
-                className="minerva-btn-primary flex-1"
-              >
-                {salvandoId === edicao.matriculaId ? 'Salvando…' : 'Salvar'}
-              </button>
-              <button type="button" onClick={cancelarEdicao} className="minerva-btn-secondary">
-                Cancelar
-              </button>
-            </div>
-          </form>
-        </div>
-      ) : null}
+              <DialogFooter>
+                <Button type="button" variant="outline" onClick={cancelarEdicao}>
+                  Cancelar
+                </Button>
+                <Button type="submit" disabled={salvandoId === edicao.matriculaId}>
+                  {salvandoId === edicao.matriculaId ? 'Salvando…' : 'Salvar'}
+                </Button>
+              </DialogFooter>
+            </form>
+          ) : null}
+        </DialogContent>
+      </Dialog>
     </PageContainer>
   )
 }

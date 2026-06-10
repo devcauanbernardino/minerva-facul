@@ -1,5 +1,37 @@
-import { useEffect, useState } from 'react'
+import { useEffect, useMemo, useState } from 'react'
+import { Link } from 'react-router-dom'
+import { BookOpen, Info, Plus, Trash2 } from 'lucide-react'
 import { AlertaErro, AlertaSucesso, PageHeader } from '../components/PageHeader'
+import { Badge } from '@/components/ui/badge'
+import { Button } from '@/components/ui/button'
+import {
+  Card,
+  CardContent,
+  CardDescription,
+  CardHeader,
+  CardTitle,
+} from '@/components/ui/card'
+import { Input } from '@/components/ui/input'
+import { Label } from '@/components/ui/label'
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from '@/components/ui/select'
+import {
+  Table,
+  TableBody,
+  TableCell,
+  TableHead,
+  TableHeader,
+  TableRow,
+} from '@/components/ui/table'
+import { EmptyState } from '../components/ui/EmptyState'
+import { LoadingState } from '../components/ui/LoadingState'
+import { PageContainer } from '../components/ui/PageContainer'
+import { StatCard } from '../components/ui/StatCard'
 import { api } from '../services/api'
 import type { Curso } from '../types/curso'
 import type { Materia } from '../types/materia'
@@ -37,6 +69,14 @@ export function Materias() {
     carregar()
   }, [])
 
+  const stats = useMemo(() => {
+    const lista = materias ?? []
+    return {
+      total: lista.length,
+      cursosComMateria: new Set(lista.map((m) => m.cursoId)).size,
+    }
+  }, [materias])
+
   function handleSubmit(e: React.FormEvent) {
     e.preventDefault()
     if (!cursoId) {
@@ -69,7 +109,7 @@ export function Materias() {
   }
 
   return (
-    <div className="mx-auto max-w-4xl px-4 py-10">
+    <PageContainer>
       <PageHeader
         titulo="Matérias"
         subtitulo="Disciplinas vinculadas aos cursos."
@@ -78,93 +118,135 @@ export function Materias() {
       {erro ? <AlertaErro mensagem={erro} /> : null}
       {sucesso ? <AlertaSucesso mensagem={sucesso} /> : null}
 
-      <section className="mb-10 grid gap-6 lg:grid-cols-[1.5fr_1fr]">
-        <div className="rounded-xl border border-minerva-cinza-escuro/10 bg-minerva-marmore p-6 shadow-sm">
-          <h2 className="mb-4 text-lg font-semibold">Nova matéria</h2>
-          <form onSubmit={handleSubmit} className="space-y-4">
-            <div>
-              <label className="block text-sm font-medium">Nome</label>
-              <input
-                value={nome}
-                onChange={(e) => setNome(e.target.value)}
-                required
-                placeholder="Ex.: Cálculo I"
-                className="mt-1 w-full rounded-lg border border-minerva-cinza-escuro/15 bg-white px-3 py-2 text-sm outline-none focus:border-primary focus:ring-2 focus:ring-primary/20"
-              />
-            </div>
-            <div>
-              <label className="block text-sm font-medium">Curso</label>
-              <select
-                value={cursoId}
-                onChange={(e) => setCursoId(e.target.value)}
-                className="mt-1 w-full rounded-lg border border-minerva-cinza-escuro/15 bg-white px-3 py-2 text-sm outline-none focus:border-primary focus:ring-2 focus:ring-primary/20"
-              >
-                <option value="">Selecione</option>
-                {cursos.map((c) => (
-                  <option key={c.id} value={c.id}>
-                    {c.nome}
-                  </option>
-                ))}
-              </select>
-            </div>
-            <button
-              type="submit"
-              disabled={enviando}
-              className="w-full rounded-lg bg-primary py-3 text-sm font-semibold uppercase tracking-[0.15em] text-minerva-marmore transition hover:bg-primary/90 disabled:opacity-60"
-            >
-              {enviando ? 'Salvando...' : 'Cadastrar matéria'}
-            </button>
-          </form>
-        </div>
+      <div className="mb-8 grid gap-4 sm:grid-cols-2">
+        <StatCard titulo="Matérias" valor={stats.total} descricao="Disciplinas cadastradas" destaque />
+        <StatCard
+          titulo="Cursos atendidos"
+          valor={stats.cursosComMateria}
+          descricao="Com disciplinas vinculadas"
+        />
+      </div>
 
-        <div className="rounded-xl border border-minerva-cinza-escuro/10 bg-minerva-marmore p-6 shadow-sm">
-          <h2 className="mb-4 text-lg font-semibold">Sobre</h2>
-          <p className="text-sm text-minerva-cinza-escuro/80">
-            Cada matéria pertence a um curso. Professores podem ser vinculados
-            depois pelo backend.
-          </p>
-        </div>
+      <section className="mb-10 grid gap-6 lg:grid-cols-[1.5fr_1fr]">
+        <Card>
+          <CardHeader>
+            <CardTitle className="flex items-center gap-2">
+              <Plus className="h-4 w-4 text-primary" />
+              Nova matéria
+            </CardTitle>
+            <CardDescription>Cada matéria pertence a um curso.</CardDescription>
+          </CardHeader>
+          <CardContent>
+            <form onSubmit={handleSubmit} className="space-y-4">
+              <div className="space-y-1.5">
+                <Label htmlFor="materia-nome">Nome</Label>
+                <Input
+                  id="materia-nome"
+                  value={nome}
+                  onChange={(e) => setNome(e.target.value)}
+                  required
+                  placeholder="Ex.: Cálculo I"
+                />
+              </div>
+              <div className="space-y-1.5">
+                <Label>Curso</Label>
+                <Select value={cursoId} onValueChange={setCursoId}>
+                  <SelectTrigger>
+                    <SelectValue placeholder="Selecione um curso" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {cursos.map((c) => (
+                      <SelectItem key={c.id} value={String(c.id)}>
+                        {c.nome}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </div>
+              <Button type="submit" size="lg" disabled={enviando} className="w-full">
+                {enviando ? 'Salvando…' : 'Cadastrar matéria'}
+              </Button>
+            </form>
+          </CardContent>
+        </Card>
+
+        <Card className="h-fit border-minerva-dourado/30 bg-minerva-dourado/5">
+          <CardHeader>
+            <CardTitle className="flex items-center gap-2">
+              <Info className="h-4 w-4 text-minerva-dourado" />
+              Sobre
+            </CardTitle>
+          </CardHeader>
+          <CardContent className="space-y-3 text-sm text-muted-foreground">
+            <p>
+              As matérias são a base para matrículas e lançamento de notas. Vincule professores na
+              tela de{' '}
+              <Link to="/professores" className="font-semibold text-primary hover:underline">
+                Professores
+              </Link>
+              .
+            </p>
+          </CardContent>
+        </Card>
       </section>
 
       <section>
-        <h2 className="mb-4 text-lg font-semibold">Matérias cadastradas</h2>
         {materias === null ? (
-          <p className="text-minerva-cinza-escuro/60">Carregando…</p>
+          <LoadingState mensagem="Carregando matérias…" />
         ) : materias.length === 0 ? (
-          <p className="text-minerva-cinza-escuro/85">Nenhuma matéria ainda.</p>
+          <EmptyState
+            titulo="Nenhuma matéria cadastrada"
+            descricao="Cadastre a primeira disciplina usando o formulário acima."
+            icone={<BookOpen className="h-7 w-7" />}
+          />
         ) : (
-          <div className="overflow-hidden rounded-xl border border-minerva-cinza-escuro/10 bg-minerva-marmore shadow-md">
-            <table className="w-full text-left text-sm">
-              <thead className="bg-minerva-cinza-claro text-minerva-cinza-escuro/75">
-                <tr>
-                  <th className="px-4 py-3 font-semibold">Id</th>
-                  <th className="px-4 py-3 font-semibold">Nome</th>
-                  <th className="px-4 py-3 font-semibold">Curso</th>
-                  <th className="px-4 py-3 font-semibold">Ações</th>
-                </tr>
-              </thead>
-              <tbody className="divide-y divide-minerva-cinza-escuro/10">
-                {materias.map((m) => (
-                  <tr key={m.id}>
-                    <td className="px-4 py-3">{m.id}</td>
-                    <td className="px-4 py-3 font-medium">{m.nome}</td>
-                    <td className="px-4 py-3">{m.cursoNome}</td>
-                    <td className="px-4 py-3">
-                      <button
-                        type="button"
-                        onClick={() => handleExcluir(m.id)}
-                        className="text-sm font-semibold text-primary hover:underline"
-                      >
-                        Excluir
-                      </button>
-                    </td>
-                  </tr>
-                ))}
-              </tbody>
-            </table>
-          </div>
+          <Card className="gap-0 overflow-hidden p-0">
+            <CardHeader className="border-b p-6 [.border-b]:pb-4">
+              <CardTitle>Matérias cadastradas</CardTitle>
+              <CardDescription>
+                {materias.length} disciplina{materias.length !== 1 ? 's' : ''} no sistema
+              </CardDescription>
+            </CardHeader>
+            <CardContent className="p-0">
+              <Table>
+                <TableHeader>
+                  <TableRow className="bg-muted/50 hover:bg-muted/50">
+                    <TableHead className="px-4">Matéria</TableHead>
+                    <TableHead className="px-4">Curso</TableHead>
+                    <TableHead className="px-4 text-right">Ações</TableHead>
+                  </TableRow>
+                </TableHeader>
+                <TableBody>
+                  {materias.map((m) => (
+                    <TableRow key={m.id}>
+                      <TableCell className="px-4 py-3">
+                        <p className="font-medium">{m.nome}</p>
+                        <p className="text-xs text-muted-foreground">ID {m.id}</p>
+                      </TableCell>
+                      <TableCell className="px-4 py-3">
+                        <Badge variant="outline" className="font-medium">
+                          {m.cursoNome}
+                        </Badge>
+                      </TableCell>
+                      <TableCell className="px-4 py-3 text-right">
+                        <Button
+                          type="button"
+                          variant="destructive"
+                          size="sm"
+                          onClick={() => handleExcluir(m.id)}
+                        >
+                          <Trash2 />
+                          Excluir
+                        </Button>
+                      </TableCell>
+                    </TableRow>
+                  ))}
+                </TableBody>
+              </Table>
+            </CardContent>
+          </Card>
         )}
       </section>
-    </div>
+    </PageContainer>
   )
 }

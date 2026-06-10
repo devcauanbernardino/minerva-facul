@@ -24,7 +24,7 @@ type DashboardChartsProps = {
   usuario: UsuarioSessao
 }
 
-const gridClass = 'mb-10 grid gap-8 sm:grid-cols-2 xl:grid-cols-3'
+const gridClass = 'mb-10 grid gap-6 lg:grid-cols-2'
 
 export function DashboardCharts({ usuario }: DashboardChartsProps) {
   const [carregando, setCarregando] = useState(true)

@@ -1,5 +1,39 @@
-import { useEffect, useState } from 'react'
+import { useEffect, useMemo, useState } from 'react'
+import { Link } from 'react-router-dom'
+import { BookOpenCheck, Pencil, Trash2, UserRound } from 'lucide-react'
 import { AlertaErro, AlertaSucesso, PageHeader } from '../components/PageHeader'
+import { Badge } from '@/components/ui/badge'
+import { Button } from '@/components/ui/button'
+import {
+  Card,
+  CardContent,
+  CardDescription,
+  CardHeader,
+  CardTitle,
+} from '@/components/ui/card'
+import { Checkbox } from '@/components/ui/checkbox'
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+} from '@/components/ui/dialog'
+import { Input } from '@/components/ui/input'
+import { Label } from '@/components/ui/label'
+import {
+  Table,
+  TableBody,
+  TableCell,
+  TableHead,
+  TableHeader,
+  TableRow,
+} from '@/components/ui/table'
+import { EmptyState } from '../components/ui/EmptyState'
+import { LoadingState } from '../components/ui/LoadingState'
+import { PageContainer } from '../components/ui/PageContainer'
+import { StatCard } from '../components/ui/StatCard'
 import { api } from '../services/api'
 import type { Professor } from '../types/professor'
 import type { Materia } from '../types/materia'
@@ -40,6 +74,27 @@ export function Professores() {
       .then((res) => setMaterias(res.data))
       .catch(() => setMaterias([]))
   }, [])
+
+  const stats = useMemo(() => {
+    const lista = professores ?? []
+    return {
+      total: lista.length,
+      comMaterias: lista.filter((p) => (p.materiaIds?.length ?? 0) > 0).length,
+      especialidades: new Set(
+        lista.map((p) => p.especialidade).filter((e): e is string => Boolean(e)),
+      ).size,
+    }
+  }, [professores])
+
+  const professorEditando = useMemo(
+    () => professores?.find((p) => p.id === editandoId) ?? null,
+    [professores, editandoId],
+  )
+
+  const professorVinculando = useMemo(
+    () => professores?.find((p) => p.id === vinculandoId) ?? null,
+    [professores, vinculandoId],
+  )
 
   function iniciarEdicao(professor: Professor) {
     setEditandoId(professor.id)
@@ -144,7 +199,7 @@ export function Professores() {
   }
 
   return (
-    <div className="mx-auto max-w-4xl px-4 py-10">
+    <PageContainer>
       <PageHeader
         titulo="Professores"
         subtitulo="Listagem e edição. Novos professores entram pelo cadastro público."
@@ -153,184 +208,215 @@ export function Professores() {
       {erro ? <AlertaErro mensagem={erro} /> : null}
       {sucesso ? <AlertaSucesso mensagem={sucesso} /> : null}
 
-      {editandoId !== null ? (
-        <section className="mb-10 rounded-xl border border-minerva-cinza-escuro/10 bg-minerva-marmore p-6 shadow-sm">
-          <h2 className="mb-4 text-lg font-semibold">Editar professor #{editandoId}</h2>
-          <form onSubmit={handleSubmit} className="grid gap-4 sm:grid-cols-2">
-            <div>
-              <label className="block text-sm font-medium">Nome</label>
-              <input
-                value={nome}
-                onChange={(e) => setNome(e.target.value)}
-                required
-                className="mt-1 w-full rounded-lg border border-minerva-cinza-escuro/15 bg-white px-3 py-2 text-sm outline-none focus:border-primary focus:ring-2 focus:ring-primary/20"
-              />
-            </div>
-            <div>
-              <label className="block text-sm font-medium">E-mail</label>
-              <input
-                type="email"
-                value={email}
-                onChange={(e) => setEmail(e.target.value)}
-                required
-                className="mt-1 w-full rounded-lg border border-minerva-cinza-escuro/15 bg-white px-3 py-2 text-sm outline-none focus:border-primary focus:ring-2 focus:ring-primary/20"
-              />
-            </div>
-            <div>
-              <label className="block text-sm font-medium">Senha</label>
-              <input
-                type="password"
-                value={senha}
-                onChange={(e) => setSenha(e.target.value)}
-                required
-                placeholder="Informe a senha"
-                className="mt-1 w-full rounded-lg border border-minerva-cinza-escuro/15 bg-white px-3 py-2 text-sm outline-none focus:border-primary focus:ring-2 focus:ring-primary/20"
-              />
-            </div>
-            <div>
-              <label className="block text-sm font-medium">Especialidade</label>
-              <input
-                value={especialidade}
-                onChange={(e) => setEspecialidade(e.target.value)}
-                className="mt-1 w-full rounded-lg border border-minerva-cinza-escuro/15 bg-white px-3 py-2 text-sm outline-none focus:border-primary focus:ring-2 focus:ring-primary/20"
-              />
-            </div>
-            <div className="flex gap-3 sm:col-span-2">
-              <button
-                type="submit"
-                disabled={enviando}
-                className="rounded-lg bg-primary px-6 py-2.5 text-sm font-semibold text-minerva-marmore hover:bg-primary/90 disabled:opacity-60"
-              >
-                {enviando ? 'Salvando...' : 'Salvar'}
-              </button>
-              <button
-                type="button"
-                onClick={cancelarEdicao}
-                className="rounded-lg border border-minerva-cinza-escuro/15 px-6 py-2.5 text-sm font-medium hover:bg-minerva-cinza-claro"
-              >
-                Cancelar
-              </button>
-            </div>
-          </form>
-        </section>
-      ) : null}
+      <div className="mb-8 grid gap-4 sm:grid-cols-3">
+        <StatCard titulo="Professores" valor={stats.total} descricao="Cadastrados no sistema" destaque />
+        <StatCard titulo="Com turmas" valor={stats.comMaterias} descricao="Matérias vinculadas" />
+        <StatCard titulo="Especialidades" valor={stats.especialidades} descricao="Áreas distintas" />
+      </div>
 
-      {vinculandoId !== null ? (
-        <section className="mb-10 rounded-xl border border-minerva-cinza-escuro/10 bg-minerva-marmore p-6 shadow-sm">
-          <h2 className="mb-2 text-lg font-semibold">Matérias do professor #{vinculandoId}</h2>
-          <p className="mb-4 text-sm text-minerva-cinza-escuro/70">
-            Selecione as disciplinas que este professor leciona. Os alunos matriculados nelas
-            aparecerão em <strong>Lançamento de notas</strong>.
-          </p>
+      <section>
+        {professores === null ? (
+          <LoadingState mensagem="Carregando professores…" />
+        ) : professores.length === 0 ? (
+          <EmptyState
+            titulo="Nenhum professor cadastrado"
+            descricao='Novos professores entram pela tela de cadastro público marcando "Sou professor".'
+            icone={<UserRound className="h-7 w-7" />}
+          />
+        ) : (
+          <Card className="gap-0 overflow-hidden p-0">
+            <CardHeader className="border-b p-6 [.border-b]:pb-4">
+              <CardTitle>Professores cadastrados</CardTitle>
+              <CardDescription>
+                {professores.length} professor{professores.length !== 1 ? 'es' : ''} no sistema
+              </CardDescription>
+            </CardHeader>
+            <CardContent className="p-0">
+              <Table>
+                <TableHeader>
+                  <TableRow className="bg-muted/50 hover:bg-muted/50">
+                    <TableHead className="px-4">Professor</TableHead>
+                    <TableHead className="px-4">E-mail</TableHead>
+                    <TableHead className="px-4">Especialidade</TableHead>
+                    <TableHead className="px-4">Matérias</TableHead>
+                    <TableHead className="px-4 text-right">Ações</TableHead>
+                  </TableRow>
+                </TableHeader>
+                <TableBody>
+                  {professores.map((p) => (
+                    <TableRow key={p.id}>
+                      <TableCell className="px-4 py-3">
+                        <p className="font-medium">{p.nome}</p>
+                        <p className="text-xs text-muted-foreground">ID {p.id}</p>
+                      </TableCell>
+                      <TableCell className="px-4 py-3 text-muted-foreground">{p.email}</TableCell>
+                      <TableCell className="px-4 py-3">
+                        {p.especialidade ? (
+                          <Badge variant="outline" className="font-medium">
+                            {p.especialidade}
+                          </Badge>
+                        ) : (
+                          <span className="text-muted-foreground/50">—</span>
+                        )}
+                      </TableCell>
+                      <TableCell className="px-4 py-3">
+                        <Badge variant="secondary" className="font-medium">
+                          {p.materiaIds?.length ?? 0} matéria
+                          {(p.materiaIds?.length ?? 0) !== 1 ? 's' : ''}
+                        </Badge>
+                      </TableCell>
+                      <TableCell className="px-4 py-3">
+                        <div className="flex justify-end gap-1.5">
+                          <Button
+                            type="button"
+                            variant="outline"
+                            size="sm"
+                            onClick={() => iniciarVinculo(p)}
+                          >
+                            <BookOpenCheck />
+                            Matérias
+                          </Button>
+                          <Button
+                            type="button"
+                            variant="outline"
+                            size="sm"
+                            onClick={() => iniciarEdicao(p)}
+                          >
+                            <Pencil />
+                            Editar
+                          </Button>
+                          <Button
+                            type="button"
+                            variant="destructive"
+                            size="sm"
+                            onClick={() => handleExcluir(p.id)}
+                          >
+                            <Trash2 />
+                            Excluir
+                          </Button>
+                        </div>
+                      </TableCell>
+                    </TableRow>
+                  ))}
+                </TableBody>
+              </Table>
+            </CardContent>
+          </Card>
+        )}
+      </section>
+
+      <Dialog open={editandoId !== null} onOpenChange={(open) => !open && cancelarEdicao()}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>Editar professor</DialogTitle>
+            <DialogDescription>
+              {professorEditando ? professorEditando.nome : `Professor #${editandoId}`}
+            </DialogDescription>
+          </DialogHeader>
+          <form onSubmit={handleSubmit} className="space-y-4">
+            <div className="grid gap-4 sm:grid-cols-2">
+              <div className="space-y-1.5">
+                <Label htmlFor="prof-nome">Nome</Label>
+                <Input
+                  id="prof-nome"
+                  value={nome}
+                  onChange={(e) => setNome(e.target.value)}
+                  required
+                />
+              </div>
+              <div className="space-y-1.5">
+                <Label htmlFor="prof-email">E-mail</Label>
+                <Input
+                  id="prof-email"
+                  type="email"
+                  value={email}
+                  onChange={(e) => setEmail(e.target.value)}
+                  required
+                />
+              </div>
+              <div className="space-y-1.5">
+                <Label htmlFor="prof-senha">Senha</Label>
+                <Input
+                  id="prof-senha"
+                  type="password"
+                  value={senha}
+                  onChange={(e) => setSenha(e.target.value)}
+                  required
+                  placeholder="Informe a senha"
+                />
+              </div>
+              <div className="space-y-1.5">
+                <Label htmlFor="prof-especialidade">Especialidade</Label>
+                <Input
+                  id="prof-especialidade"
+                  value={especialidade}
+                  onChange={(e) => setEspecialidade(e.target.value)}
+                  placeholder="Ex.: Banco de Dados"
+                />
+              </div>
+            </div>
+            <DialogFooter>
+              <Button type="button" variant="outline" onClick={cancelarEdicao}>
+                Cancelar
+              </Button>
+              <Button type="submit" disabled={enviando}>
+                {enviando ? 'Salvando…' : 'Salvar alterações'}
+              </Button>
+            </DialogFooter>
+          </form>
+        </DialogContent>
+      </Dialog>
+
+      <Dialog open={vinculandoId !== null} onOpenChange={(open) => !open && cancelarVinculo()}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>Matérias do professor</DialogTitle>
+            <DialogDescription>
+              {professorVinculando ? professorVinculando.nome : `Professor #${vinculandoId}`} ·
+              selecione as disciplinas lecionadas. Os alunos matriculados nelas aparecerão em{' '}
+              <strong>Lançamento de notas</strong>.
+            </DialogDescription>
+          </DialogHeader>
           <form onSubmit={handleVincularMaterias} className="space-y-4">
             {materias.length === 0 ? (
-              <p className="text-sm text-minerva-cinza-escuro/65">
-                Nenhuma matéria cadastrada. Cadastre matérias antes de vincular.
+              <p className="text-sm text-muted-foreground">
+                Nenhuma matéria cadastrada. Cadastre matérias em{' '}
+                <Link to="/materias" className="font-semibold text-primary hover:underline">
+                  Matérias
+                </Link>{' '}
+                antes de vincular.
               </p>
             ) : (
-              <div className="grid gap-2 sm:grid-cols-2">
+              <div className="grid max-h-72 gap-2 overflow-y-auto pr-1 sm:grid-cols-2">
                 {materias.map((m) => (
-                  <label
+                  <Label
                     key={m.id}
-                    className="flex cursor-pointer items-center gap-2 rounded-lg border border-minerva-cinza-escuro/10 px-3 py-2 text-sm hover:bg-minerva-cinza-claro"
+                    className="flex cursor-pointer items-start gap-2.5 rounded-lg border px-3 py-2.5 font-normal transition-colors hover:bg-muted has-data-[state=checked]:border-primary/40 has-data-[state=checked]:bg-primary/5"
                   >
-                    <input
-                      type="checkbox"
+                    <Checkbox
                       checked={materiaIdsSelecionadas.includes(m.id)}
-                      onChange={() => toggleMateria(m.id)}
-                      className="accent-primary"
+                      onCheckedChange={() => toggleMateria(m.id)}
+                      className="mt-0.5"
                     />
-                    <span>
+                    <span className="text-sm leading-snug">
                       {m.nome}
-                      <span className="ml-1 text-minerva-cinza-escuro/50">({m.cursoNome})</span>
+                      <span className="block text-xs text-muted-foreground">{m.cursoNome}</span>
                     </span>
-                  </label>
+                  </Label>
                 ))}
               </div>
             )}
-            <div className="flex gap-3">
-              <button
-                type="submit"
-                disabled={vinculando || materias.length === 0}
-                className="rounded-lg bg-primary px-6 py-2.5 text-sm font-semibold text-minerva-marmore hover:bg-primary/90 disabled:opacity-60"
-              >
-                {vinculando ? 'Salvando…' : 'Salvar vínculos'}
-              </button>
-              <button
-                type="button"
-                onClick={cancelarVinculo}
-                className="rounded-lg border border-minerva-cinza-escuro/15 px-6 py-2.5 text-sm font-medium hover:bg-minerva-cinza-claro"
-              >
+            <DialogFooter>
+              <Button type="button" variant="outline" onClick={cancelarVinculo}>
                 Cancelar
-              </button>
-            </div>
+              </Button>
+              <Button type="submit" disabled={vinculando || materias.length === 0}>
+                {vinculando ? 'Salvando…' : 'Salvar vínculos'}
+              </Button>
+            </DialogFooter>
           </form>
-        </section>
-      ) : null}
-
-      <section>
-        <h2 className="mb-4 text-lg font-semibold">Professores cadastrados</h2>
-        {professores === null ? (
-          <p className="text-minerva-cinza-escuro/60">Carregando…</p>
-        ) : professores.length === 0 ? (
-          <p className="text-minerva-cinza-escuro/85">
-            Nenhum professor na API. Use a tela de{' '}
-            <a href="/cadastro" className="font-semibold text-primary hover:underline">
-              cadastro
-            </a>{' '}
-            marcando &quot;Sou professor&quot;.
-          </p>
-        ) : (
-          <div className="overflow-hidden rounded-xl border border-minerva-cinza-escuro/10 bg-minerva-marmore shadow-md">
-            <table className="w-full text-left text-sm">
-              <thead className="bg-minerva-cinza-claro text-minerva-cinza-escuro/75">
-                <tr>
-                  <th className="px-4 py-3 font-semibold">Id</th>
-                  <th className="px-4 py-3 font-semibold">Nome</th>
-                  <th className="px-4 py-3 font-semibold">E-mail</th>
-                  <th className="px-4 py-3 font-semibold">Especialidade</th>
-                  <th className="px-4 py-3 font-semibold">Matérias</th>
-                  <th className="px-4 py-3 font-semibold">Ações</th>
-                </tr>
-              </thead>
-              <tbody className="divide-y divide-minerva-cinza-escuro/10">
-                {professores.map((p) => (
-                  <tr key={p.id}>
-                    <td className="px-4 py-3">{p.id}</td>
-                    <td className="px-4 py-3 font-medium">{p.nome}</td>
-                    <td className="px-4 py-3">{p.email}</td>
-                    <td className="px-4 py-3">{p.especialidade ?? '—'}</td>
-                    <td className="px-4 py-3">{p.materiaIds?.length ?? 0}</td>
-                    <td className="px-4 py-3 space-x-3">
-                      <button
-                        type="button"
-                        onClick={() => iniciarVinculo(p)}
-                        className="text-sm font-semibold text-primary hover:underline"
-                      >
-                        Matérias
-                      </button>
-                      <button
-                        type="button"
-                        onClick={() => iniciarEdicao(p)}
-                        className="text-sm font-semibold text-primary hover:underline"
-                      >
-                        Editar
-                      </button>
-                      <button
-                        type="button"
-                        onClick={() => handleExcluir(p.id)}
-                        className="text-sm font-semibold text-primary hover:underline"
-                      >
-                        Excluir
-                      </button>
-                    </td>
-                  </tr>
-                ))}
-              </tbody>
-            </table>
-          </div>
-        )}
-      </section>
-    </div>
+        </DialogContent>
+      </Dialog>
+    </PageContainer>
   )
 }

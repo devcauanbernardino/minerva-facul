@@ -5,7 +5,6 @@
     "lib": ["ES2023", "DOM"],
     "module": "esnext",
     "skipLibCheck": true,
-    "baseUrl": ".",
     "paths": {
       "@/*": ["./src/*"]
     },

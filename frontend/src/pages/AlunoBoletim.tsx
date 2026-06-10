@@ -1,6 +1,16 @@
 import { useEffect, useMemo, useState } from 'react'
-import { AcademicCapIcon } from '@heroicons/react/24/outline'
+import { Award, GraduationCap } from 'lucide-react'
 import { AlertaErro, PageHeader } from '../components/PageHeader'
+import { Badge } from '@/components/ui/badge'
+import { Card, CardContent } from '@/components/ui/card'
+import {
+  Table,
+  TableBody,
+  TableCell,
+  TableHead,
+  TableHeader,
+  TableRow,
+} from '@/components/ui/table'
 import { BadgeSituacao } from '../components/ui/BadgeSituacao'
 import { EmptyState } from '../components/ui/EmptyState'
 import { LoadingState } from '../components/ui/LoadingState'
@@ -114,10 +124,15 @@ export function AlunoBoletim() {
               <div>
                 <p className="text-sm text-minerva-marmore/75">Aluno</p>
                 <h2 className="font-display text-2xl font-bold">{boletim.nome}</h2>
-                <p className="mt-2 text-sm text-minerva-marmore/85">
-                  {boletim.cursoNome}
-                  {boletim.bolsa ? ' · Bolsista' : ''}
-                </p>
+                <div className="mt-2 flex flex-wrap items-center gap-2">
+                  <p className="text-sm text-minerva-marmore/85">{boletim.cursoNome}</p>
+                  {boletim.bolsa ? (
+                    <Badge className="gap-1 border-minerva-dourado/30 bg-minerva-dourado/20 text-minerva-marmore">
+                      <Award className="h-3 w-3" />
+                      Bolsista
+                    </Badge>
+                  ) : null}
+                </div>
                 <p className="mt-1 font-mono text-xs text-minerva-marmore/70">{boletim.email}</p>
               </div>
               <div className="rounded-xl bg-minerva-marmore/15 px-4 py-3 text-center backdrop-blur-sm">
@@ -125,6 +140,10 @@ export function AlunoBoletim() {
                 <p className="font-display text-lg font-bold">{new Date().getFullYear()}.1</p>
               </div>
             </div>
+            <div
+              className="pointer-events-none absolute -right-10 -top-10 h-44 w-44 rounded-full bg-minerva-dourado/25 blur-3xl"
+              aria-hidden
+            />
           </div>
 
           {stats ? (
@@ -178,49 +197,51 @@ export function AlunoBoletim() {
             <EmptyState
               titulo="Nenhuma disciplina no boletim"
               descricao="Aguarde a secretaria cadastrar matérias no seu curso ou realizar sua matrícula."
-              icone={<AcademicCapIcon className="h-7 w-7" />}
+              icone={<GraduationCap className="h-7 w-7" />}
             />
           ) : (
-            <div className="minerva-table-wrap overflow-x-auto">
-              <table className="minerva-table">
-                <thead>
-                  <tr>
-                    <th>Disciplina</th>
-                    <th>Situação</th>
-                    <th>Nota</th>
-                    <th>Frequência</th>
-                  </tr>
-                </thead>
-                <tbody>
-                  {boletim.disciplinas.map((d) => (
-                    <tr key={d.materiaId}>
-                      <td>
-                        <p className="font-medium">{d.materiaNome}</p>
-                        <p className="text-xs text-minerva-cinza-escuro/45">ID {d.materiaId}</p>
-                      </td>
-                      <td>
-                        <BadgeSituacao situacao={d.situacao === 'ATIVA' ? 'CURSANDO' : d.situacao} />
-                        <span className="sr-only">{labelSituacaoBoletim(d.situacao)}</span>
-                      </td>
-                      <td>
-                        <span
-                          className={
-                            d.nota != null && d.nota >= 7
-                              ? 'font-semibold text-emerald-700'
-                              : d.nota != null && d.nota < 5
-                                ? 'font-semibold text-red-700'
-                                : 'font-semibold text-minerva-cinza-escuro'
-                          }
-                        >
-                          {formatarNota(d.nota)}
-                        </span>
-                      </td>
-                      <td>{formatarFrequencia(d.frequencia)}</td>
-                    </tr>
-                  ))}
-                </tbody>
-              </table>
-            </div>
+            <Card className="gap-0 overflow-hidden p-0">
+              <CardContent className="p-0">
+                <Table>
+                  <TableHeader>
+                    <TableRow className="bg-muted/50 hover:bg-muted/50">
+                      <TableHead className="px-4">Disciplina</TableHead>
+                      <TableHead className="px-4">Situação</TableHead>
+                      <TableHead className="px-4">Nota</TableHead>
+                      <TableHead className="px-4">Frequência</TableHead>
+                    </TableRow>
+                  </TableHeader>
+                  <TableBody>
+                    {boletim.disciplinas.map((d) => (
+                      <TableRow key={d.materiaId}>
+                        <TableCell className="px-4 py-3">
+                          <p className="font-medium">{d.materiaNome}</p>
+                          <p className="text-xs text-muted-foreground">ID {d.materiaId}</p>
+                        </TableCell>
+                        <TableCell className="px-4 py-3">
+                          <BadgeSituacao situacao={d.situacao === 'ATIVA' ? 'CURSANDO' : d.situacao} />
+                          <span className="sr-only">{labelSituacaoBoletim(d.situacao)}</span>
+                        </TableCell>
+                        <TableCell className="px-4 py-3">
+                          <span
+                            className={
+                              d.nota != null && d.nota >= 7
+                                ? 'font-semibold text-emerald-700'
+                                : d.nota != null && d.nota < 5
+                                  ? 'font-semibold text-red-700'
+                                  : 'font-semibold'
+                            }
+                          >
+                            {formatarNota(d.nota)}
+                          </span>
+                        </TableCell>
+                        <TableCell className="px-4 py-3">{formatarFrequencia(d.frequencia)}</TableCell>
+                      </TableRow>
+                    ))}
+                  </TableBody>
+                </Table>
+              </CardContent>
+            </Card>
           )}
         </div>
       ) : null}

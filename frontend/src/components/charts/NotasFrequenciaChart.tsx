@@ -45,7 +45,7 @@ export function NotasFrequenciaChart({
           {vazio ?? 'Nenhuma nota ou frequência lançada ainda.'}
         </p>
       ) : (
-        <ResponsiveContainer width="100%" height={280}>
+        <ResponsiveContainer width="100%" height={300}>
           <BarChart data={chartData} margin={{ top: 8, right: 8, left: -12, bottom: 0 }}>
             <CartesianGrid strokeDasharray="3 3" stroke="rgba(46,46,46,0.08)" vertical={false} />
             <XAxis
