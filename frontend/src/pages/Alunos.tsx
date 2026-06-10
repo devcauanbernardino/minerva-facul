@@ -1,5 +1,38 @@
-import { useEffect, useState } from 'react'
-import { AlertaErro, PageHeader } from '../components/PageHeader'
+import { useEffect, useMemo, useState } from 'react'
+import { Link } from 'react-router-dom'
+import { Award, Lightbulb, Plus, Users } from 'lucide-react'
+import { AlertaErro, AlertaSucesso, PageHeader } from '../components/PageHeader'
+import { Badge } from '@/components/ui/badge'
+import { Button } from '@/components/ui/button'
+import {
+  Card,
+  CardContent,
+  CardDescription,
+  CardHeader,
+  CardTitle,
+} from '@/components/ui/card'
+import { Checkbox } from '@/components/ui/checkbox'
+import { Input } from '@/components/ui/input'
+import { Label } from '@/components/ui/label'
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from '@/components/ui/select'
+import {
+  Table,
+  TableBody,
+  TableCell,
+  TableHead,
+  TableHeader,
+  TableRow,
+} from '@/components/ui/table'
+import { EmptyState } from '../components/ui/EmptyState'
+import { LoadingState } from '../components/ui/LoadingState'
+import { PageContainer } from '../components/ui/PageContainer'
+import { StatCard } from '../components/ui/StatCard'
 import { api } from '../services/api'
 import type { Aluno } from '../types/aluno'
 import type { Curso } from '../types/curso'
@@ -8,11 +41,13 @@ export function Alunos() {
   const [alunos, setAlunos] = useState<Aluno[] | null>(null)
   const [cursos, setCursos] = useState<Curso[]>([])
   const [erro, setErro] = useState<string | null>(null)
+  const [sucesso, setSucesso] = useState<string | null>(null)
   const [nome, setNome] = useState('')
   const [email, setEmail] = useState('')
   const [senha, setSenha] = useState('')
   const [cursoId, setCursoId] = useState<string>('')
   const [bolsa, setBolsa] = useState(false)
+  const [enviando, setEnviando] = useState(false)
 
   useEffect(() => {
     api
@@ -39,6 +74,15 @@ export function Alunos() {
       })
   }, [])
 
+  const stats = useMemo(() => {
+    const lista = alunos ?? []
+    return {
+      total: lista.length,
+      bolsistas: lista.filter((a) => a.bolsa).length,
+      cursos: new Set(lista.map((a) => a.curso.id)).size,
+    }
+  }, [alunos])
+
   function handleSubmit(event: React.FormEvent<HTMLFormElement>) {
     event.preventDefault()
 
@@ -47,6 +91,8 @@ export function Alunos() {
       return
     }
 
+    setEnviando(true)
+    setSucesso(null)
     api
       .post<Aluno>('/alunos', {
         nome,
@@ -62,142 +108,188 @@ export function Alunos() {
         setSenha('')
         setBolsa(false)
         setErro(null)
+        setSucesso('Aluno cadastrado com sucesso.')
       })
       .catch(() => {
         setErro('Erro ao cadastrar aluno. Confira os dados e tente novamente.')
       })
+      .finally(() => setEnviando(false))
   }
 
   return (
-    <div className="mx-auto max-w-4xl px-4 py-10">
+    <PageContainer>
       <PageHeader
         titulo="Alunos"
         subtitulo="Cadastro e listagem via API acadêmica."
       />
 
       {erro ? <AlertaErro mensagem={erro} /> : null}
+      {sucesso ? <AlertaSucesso mensagem={sucesso} /> : null}
+
+      <div className="mb-8 grid gap-4 sm:grid-cols-3">
+        <StatCard titulo="Alunos" valor={stats.total} descricao="Cadastrados no sistema" destaque />
+        <StatCard titulo="Bolsistas" valor={stats.bolsistas} descricao="Com bolsa ativa" />
+        <StatCard titulo="Cursos" valor={stats.cursos} descricao="Com alunos vinculados" />
+      </div>
 
       <section className="mb-10 grid gap-6 lg:grid-cols-[1.5fr_1fr]">
-        <div className="rounded-xl border border-minerva-cinza-escuro/10 bg-minerva-marmore p-6 shadow-sm shadow-minerva-cinza-escuro/5">
-          <h2 className="mb-4 text-lg font-semibold text-minerva-cinza-escuro">Cadastrar novo aluno</h2>
-          <form onSubmit={handleSubmit} className="space-y-4">
-            <div>
-              <label className="block text-sm font-medium text-minerva-cinza-escuro">Nome</label>
-              <input
-                value={nome}
-                onChange={(e) => setNome(e.target.value)}
-                required
-                className="mt-1 w-full rounded-lg border border-minerva-cinza-escuro/15 bg-white px-3 py-2 text-sm text-minerva-cinza-escuro outline-none focus:border-primary focus:ring-2 focus:ring-primary/20"
-              />
-            </div>
-
-            <div>
-              <label className="block text-sm font-medium text-minerva-cinza-escuro">E-mail</label>
-              <input
-                type="email"
-                value={email}
-                onChange={(e) => setEmail(e.target.value)}
-                required
-                className="mt-1 w-full rounded-lg border border-minerva-cinza-escuro/15 bg-white px-3 py-2 text-sm text-minerva-cinza-escuro outline-none focus:border-primary focus:ring-2 focus:ring-primary/20"
-              />
-            </div>
-
-            <div>
-              <label className="block text-sm font-medium text-minerva-cinza-escuro">Senha</label>
-              <input
-                type="password"
-                value={senha}
-                onChange={(e) => setSenha(e.target.value)}
-                required
-                className="mt-1 w-full rounded-lg border border-minerva-cinza-escuro/15 bg-white px-3 py-2 text-sm text-minerva-cinza-escuro outline-none focus:border-primary focus:ring-2 focus:ring-primary/20"
-              />
-            </div>
-
-            <div>
-              <label className="block text-sm font-medium text-minerva-cinza-escuro">Curso</label>
-              <select
-                value={cursoId}
-                onChange={(e) => setCursoId(e.target.value)}
-                className="mt-1 w-full rounded-lg border border-minerva-cinza-escuro/15 bg-white px-3 py-2 text-sm text-minerva-cinza-escuro outline-none focus:border-primary focus:ring-2 focus:ring-primary/20"
-              >
-                <option value="">Selecione um curso</option>
-                {cursos.map((curso) => (
-                  <option key={curso.id} value={curso.id}>
-                    {curso.nome}
-                  </option>
-                ))}
-              </select>
-            </div>
-
-            <div className="flex items-center gap-3">
-              <label className="inline-flex items-center gap-2 text-sm text-minerva-cinza-escuro">
-                <input
-                  type="checkbox"
-                  checked={bolsa}
-                  onChange={(e) => setBolsa(e.target.checked)}
-                  className="h-4 w-4 accent-[var(--color-primary)]"
+        <Card>
+          <CardHeader>
+            <CardTitle className="flex items-center gap-2">
+              <Plus className="h-4 w-4 text-primary" />
+              Cadastrar novo aluno
+            </CardTitle>
+            <CardDescription>
+              O aluno é vinculado a um curso e já pode fazer login com o e-mail e a senha.
+            </CardDescription>
+          </CardHeader>
+          <CardContent>
+            <form onSubmit={handleSubmit} className="space-y-4">
+              <div className="space-y-1.5">
+                <Label htmlFor="aluno-nome">Nome</Label>
+                <Input
+                  id="aluno-nome"
+                  value={nome}
+                  onChange={(e) => setNome(e.target.value)}
+                  required
+                  placeholder="Nome completo"
                 />
-                Bolsista
-              </label>
-            </div>
+              </div>
 
-            <button
-              type="submit"
-              className="w-full rounded-lg bg-primary py-3 font-semibold uppercase tracking-[0.15em] text-minerva-marmore transition hover:bg-primary/90 active:bg-primary/80"
-            >
-              Cadastrar aluno
-            </button>
-          </form>
-        </div>
+              <div className="space-y-1.5">
+                <Label htmlFor="aluno-email">E-mail</Label>
+                <Input
+                  id="aluno-email"
+                  type="email"
+                  value={email}
+                  onChange={(e) => setEmail(e.target.value)}
+                  required
+                  placeholder="aluno@minerva.com"
+                />
+              </div>
 
-        <div className="rounded-xl border border-minerva-cinza-escuro/10 bg-minerva-marmore p-6 shadow-sm shadow-minerva-cinza-escuro/5">
-          <h2 className="mb-4 text-lg font-semibold text-minerva-cinza-escuro">Dicas</h2>
-          <p className="text-sm text-minerva-cinza-escuro/80">
-            O curso deve existir no backend antes de cadastrar o aluno.
-          </p>
-          <p className="mt-3 text-sm text-minerva-cinza-escuro/80">
-            Se não houver curso, cadastre um primeiro em{' '}
-            <code className="rounded-md border border-minerva-cinza-escuro/10 bg-minerva-marmore px-1.5 py-0.5 text-sm">
-              /cursos
-            </code>
-            .
-          </p>
-        </div>
+              <div className="space-y-1.5">
+                <Label htmlFor="aluno-senha">Senha</Label>
+                <Input
+                  id="aluno-senha"
+                  type="password"
+                  value={senha}
+                  onChange={(e) => setSenha(e.target.value)}
+                  required
+                  placeholder="••••••••"
+                />
+              </div>
+
+              <div className="space-y-1.5">
+                <Label>Curso</Label>
+                <Select value={cursoId} onValueChange={setCursoId}>
+                  <SelectTrigger>
+                    <SelectValue placeholder="Selecione um curso" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {cursos.map((curso) => (
+                      <SelectItem key={curso.id} value={String(curso.id)}>
+                        {curso.nome}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </div>
+
+              <div className="flex items-center gap-2">
+                <Checkbox
+                  id="aluno-bolsa"
+                  checked={bolsa}
+                  onCheckedChange={(checked) => setBolsa(checked === true)}
+                />
+                <Label htmlFor="aluno-bolsa" className="cursor-pointer font-normal">
+                  Aluno bolsista
+                </Label>
+              </div>
+
+              <Button type="submit" size="lg" disabled={enviando} className="w-full">
+                {enviando ? 'Salvando…' : 'Cadastrar aluno'}
+              </Button>
+            </form>
+          </CardContent>
+        </Card>
+
+        <Card className="h-fit border-minerva-dourado/30 bg-minerva-dourado/5">
+          <CardHeader>
+            <CardTitle className="flex items-center gap-2">
+              <Lightbulb className="h-4 w-4 text-minerva-dourado" />
+              Dicas
+            </CardTitle>
+          </CardHeader>
+          <CardContent className="space-y-3 text-sm text-muted-foreground">
+            <p>O curso deve existir no backend antes de cadastrar o aluno.</p>
+            <p>
+              Se não houver curso, cadastre um primeiro em{' '}
+              <Link to="/cursos" className="font-semibold text-primary hover:underline">
+                Cursos
+              </Link>
+              .
+            </p>
+          </CardContent>
+        </Card>
       </section>
 
       <section>
-        <h2 className="mb-4 text-lg font-semibold text-minerva-cinza-escuro">Alunos cadastrados</h2>
         {alunos === null ? (
-          <p className="text-minerva-cinza-escuro/60">Carregando…</p>
+          <LoadingState mensagem="Carregando alunos…" />
         ) : alunos.length === 0 ? (
-          <p className="text-minerva-cinza-escuro/85">Nenhum aluno cadastrado ainda.</p>
+          <EmptyState
+            titulo="Nenhum aluno cadastrado"
+            descricao="Cadastre o primeiro aluno usando o formulário acima."
+            icone={<Users className="h-7 w-7" />}
+          />
         ) : (
-          <div className="overflow-hidden rounded-xl border border-minerva-cinza-escuro/10 bg-minerva-marmore shadow-md shadow-minerva-cinza-escuro/5">
-            <table className="w-full text-left text-sm">
-              <thead className="bg-minerva-cinza-claro text-minerva-cinza-escuro/75">
-                <tr>
-                  <th className="px-4 py-3 font-semibold">Id</th>
-                  <th className="px-4 py-3 font-semibold">Nome</th>
-                  <th className="px-4 py-3 font-semibold">E-mail</th>
-                  <th className="px-4 py-3 font-semibold">Curso</th>
-                  <th className="px-4 py-3 font-semibold">Bolsa</th>
-                </tr>
-              </thead>
-              <tbody className="divide-y divide-minerva-cinza-escuro/10">
-                {alunos.map((aluno) => (
-                  <tr key={aluno.id} className="text-minerva-cinza-escuro">
-                    <td className="px-4 py-3">{aluno.id}</td>
-                    <td className="px-4 py-3 font-medium">{aluno.nome}</td>
-                    <td className="px-4 py-3">{aluno.email}</td>
-                    <td className="px-4 py-3">{aluno.curso.nome}</td>
-                    <td className="px-4 py-3">{aluno.bolsa ? 'Sim' : 'Não'}</td>
-                  </tr>
-                ))}
-              </tbody>
-            </table>
-          </div>
+          <Card className="gap-0 overflow-hidden p-0">
+            <CardHeader className="border-b p-6 [.border-b]:pb-4">
+              <CardTitle>Alunos cadastrados</CardTitle>
+              <CardDescription>
+                {alunos.length} aluno{alunos.length !== 1 ? 's' : ''} no sistema
+              </CardDescription>
+            </CardHeader>
+            <CardContent className="p-0">
+              <Table>
+                <TableHeader>
+                  <TableRow className="bg-muted/50 hover:bg-muted/50">
+                    <TableHead className="px-4">Aluno</TableHead>
+                    <TableHead className="px-4">E-mail</TableHead>
+                    <TableHead className="px-4">Curso</TableHead>
+                    <TableHead className="px-4">Bolsa</TableHead>
+                  </TableRow>
+                </TableHeader>
+                <TableBody>
+                  {alunos.map((aluno) => (
+                    <TableRow key={aluno.id}>
+                      <TableCell className="px-4 py-3">
+                        <p className="font-medium">{aluno.nome}</p>
+                        <p className="text-xs text-muted-foreground">ID {aluno.id}</p>
+                      </TableCell>
+                      <TableCell className="px-4 py-3 text-muted-foreground">
+                        {aluno.email}
+                      </TableCell>
+                      <TableCell className="px-4 py-3">{aluno.curso.nome}</TableCell>
+                      <TableCell className="px-4 py-3">
+                        {aluno.bolsa ? (
+                          <Badge className="gap-1 bg-minerva-dourado/15 text-yellow-800">
+                            <Award className="h-3 w-3" />
+                            Bolsista
+                          </Badge>
+                        ) : (
+                          <span className="text-muted-foreground/50">—</span>
+                        )}
+                      </TableCell>
+                    </TableRow>
+                  ))}
+                </TableBody>
+              </Table>
+            </CardContent>
+          </Card>
         )}
       </section>
-    </div>
+    </PageContainer>
   )
 }

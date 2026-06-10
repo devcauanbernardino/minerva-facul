@@ -26,7 +26,7 @@ export function SituacaoPieChart({ titulo, descricao, dados, vazio }: SituacaoPi
           {vazio ?? 'Sem dados para exibir.'}
         </p>
       ) : (
-        <ResponsiveContainer width="100%" height={260}>
+        <ResponsiveContainer width="100%" height={300}>
           <PieChart>
             <Pie
               data={dados}

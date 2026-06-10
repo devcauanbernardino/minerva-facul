@@ -34,7 +34,7 @@ export function ContagemBarChart({
           {vazio ?? 'Sem dados para exibir.'}
         </p>
       ) : (
-        <ResponsiveContainer width="100%" height={260}>
+        <ResponsiveContainer width="100%" height={300}>
           <BarChart data={dados} margin={{ top: 8, right: 8, left: -12, bottom: 0 }}>
             <CartesianGrid strokeDasharray="3 3" stroke="rgba(46,46,46,0.08)" vertical={false} />
             <XAxis dataKey="name" tick={{ fontSize: 11, fill: '#64748b' }} />

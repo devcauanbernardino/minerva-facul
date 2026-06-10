@@ -1,7 +1,32 @@
 import { useCallback, useEffect, useMemo, useState } from 'react'
 import { Link } from 'react-router-dom'
-import { ClipboardDocumentListIcon } from '@heroicons/react/24/outline'
+import { CheckCircle2, ClipboardList, ListChecks, Plus, Search, Trash2 } from 'lucide-react'
 import { AlertaErro, AlertaSucesso, PageHeader } from '../components/PageHeader'
+import { Button } from '@/components/ui/button'
+import {
+  Card,
+  CardContent,
+  CardDescription,
+  CardHeader,
+  CardTitle,
+} from '@/components/ui/card'
+import { Input } from '@/components/ui/input'
+import { Label } from '@/components/ui/label'
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from '@/components/ui/select'
+import {
+  Table,
+  TableBody,
+  TableCell,
+  TableHead,
+  TableHeader,
+  TableRow,
+} from '@/components/ui/table'
 import { BadgeSituacao } from '../components/ui/BadgeSituacao'
 import { EmptyState } from '../components/ui/EmptyState'
 import { LoadingState } from '../components/ui/LoadingState'
@@ -22,6 +47,14 @@ import {
   contagemPorCampo,
   mediaNotasPorCampo,
 } from '../utils/charts'
+
+const opcoesSituacao: { valor: SituacaoMatricula; label: string }[] = [
+  { valor: 'ATIVA', label: 'Ativa' },
+  { valor: 'CONCLUIDA', label: 'Concluída' },
+  { valor: 'CANCELADA', label: 'Cancelada' },
+  { valor: 'REPROVADA', label: 'Reprovada' },
+  { valor: 'TRANCADA', label: 'Trancada' },
+]
 
 export function Matriculas() {
   const [matriculas, setMatriculas] = useState<Matricula[] | null>(null)
@@ -231,204 +264,232 @@ export function Matriculas() {
       ) : null}
 
       <section className="mb-10 grid gap-6 lg:grid-cols-[1.6fr_1fr]">
-        <div className="minerva-card p-6">
-          <h2 className="mb-1 font-display text-lg font-semibold">Nova matrícula</h2>
-          <p className="mb-5 text-sm text-minerva-cinza-escuro/65">
-            Selecione o aluno e matricule-o em uma matéria do curso dele.
-          </p>
-          <form onSubmit={handleSubmit} className="space-y-4">
-            <div>
-              <label className="block text-sm font-medium text-minerva-cinza-escuro">Aluno</label>
-              <select
-                value={alunoId}
-                onChange={(e) => handleAlunoChange(e.target.value)}
-                className="minerva-input"
-                required
-              >
-                <option value="">Selecione</option>
-                {alunos.map((a) => (
-                  <option key={a.id} value={a.id}>
-                    {a.nome} · {a.curso.nome}
-                  </option>
-                ))}
-              </select>
-            </div>
-            <div>
-              <label className="block text-sm font-medium text-minerva-cinza-escuro">Matéria</label>
-              {alunoSelecionado ? (
-                <p className="mb-1 text-xs text-minerva-cinza-escuro/60">
-                  Curso: <strong>{alunoSelecionado.curso.nome}</strong>
-                </p>
-              ) : null}
-              <select
-                value={materiaId}
-                onChange={(e) => setMateriaId(e.target.value)}
-                className="minerva-input"
-                required
-                disabled={!alunoSelecionado || materiasDoCurso.length === 0}
-              >
-                <option value="">
-                  {!alunoSelecionado
-                    ? 'Selecione um aluno primeiro'
-                    : materiasDoCurso.length === 0
-                      ? 'Nenhuma matéria neste curso'
-                      : 'Selecione'}
-                </option>
-                {materiasDoCurso.map((m) => (
-                  <option key={m.id} value={m.id}>
-                    {m.nome}
-                  </option>
-                ))}
-              </select>
-            </div>
-            <div>
-              <label className="block text-sm font-medium text-minerva-cinza-escuro">Situação</label>
-              <select
-                value={situacao}
-                onChange={(e) => setSituacao(e.target.value as SituacaoMatricula)}
-                className="minerva-input"
-              >
-                <option value="ATIVA">Ativa</option>
-                <option value="CONCLUIDA">Concluída</option>
-                <option value="CANCELADA">Cancelada</option>
-                <option value="REPROVADA">Reprovada</option>
-                <option value="TRANCADA">Trancada</option>
-              </select>
-            </div>
-            <button type="submit" disabled={enviando} className="minerva-btn-primary w-full">
-              {enviando ? 'Salvando…' : 'Matricular aluno'}
-            </button>
-          </form>
-        </div>
+        <Card>
+          <CardHeader>
+            <CardTitle className="flex items-center gap-2">
+              <Plus className="h-4 w-4 text-primary" />
+              Nova matrícula
+            </CardTitle>
+            <CardDescription>
+              Selecione o aluno e matricule-o em uma matéria do curso dele.
+            </CardDescription>
+          </CardHeader>
+          <CardContent>
+            <form onSubmit={handleSubmit} className="space-y-4">
+              <div className="space-y-1.5">
+                <Label>Aluno</Label>
+                <Select value={alunoId} onValueChange={handleAlunoChange}>
+                  <SelectTrigger>
+                    <SelectValue placeholder="Selecione um aluno" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {alunos.map((a) => (
+                      <SelectItem key={a.id} value={String(a.id)}>
+                        {a.nome} · {a.curso.nome}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </div>
+              <div className="space-y-1.5">
+                <Label>Matéria</Label>
+                {alunoSelecionado ? (
+                  <p className="text-xs text-muted-foreground">
+                    Curso: <strong>{alunoSelecionado.curso.nome}</strong>
+                  </p>
+                ) : null}
+                <Select
+                  value={materiaId}
+                  onValueChange={setMateriaId}
+                  disabled={!alunoSelecionado || materiasDoCurso.length === 0}
+                >
+                  <SelectTrigger>
+                    <SelectValue
+                      placeholder={
+                        !alunoSelecionado
+                          ? 'Selecione um aluno primeiro'
+                          : materiasDoCurso.length === 0
+                            ? 'Nenhuma matéria neste curso'
+                            : 'Selecione'
+                      }
+                    />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {materiasDoCurso.map((m) => (
+                      <SelectItem key={m.id} value={String(m.id)}>
+                        {m.nome}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </div>
+              <div className="space-y-1.5">
+                <Label>Situação</Label>
+                <Select
+                  value={situacao}
+                  onValueChange={(v) => setSituacao(v as SituacaoMatricula)}
+                >
+                  <SelectTrigger>
+                    <SelectValue />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {opcoesSituacao.map((o) => (
+                      <SelectItem key={o.valor} value={o.valor}>
+                        {o.label}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </div>
+              <Button type="submit" size="lg" disabled={enviando} className="w-full">
+                {enviando ? 'Salvando…' : 'Matricular aluno'}
+              </Button>
+            </form>
+          </CardContent>
+        </Card>
 
-        <div className="minerva-card p-6">
-          <h2 className="mb-4 font-display text-lg font-semibold">Antes de matricular</h2>
-          <ul className="space-y-3 text-sm text-minerva-cinza-escuro/80">
-            <li className="flex gap-2">
-              <span className="font-bold text-primary">1.</span>
-              <span>
-                Cadastre{' '}
-                <Link to="/alunos" className="font-semibold text-primary hover:underline">
-                  alunos
-                </Link>{' '}
-                vinculados a um curso
-              </span>
-            </li>
-            <li className="flex gap-2">
-              <span className="font-bold text-primary">2.</span>
-              <span>
-                Cadastre{' '}
-                <Link to="/materias" className="font-semibold text-primary hover:underline">
-                  matérias
-                </Link>{' '}
-                do mesmo curso
-              </span>
-            </li>
-            <li className="flex gap-2">
-              <span className="font-bold text-primary">3.</span>
-              <span>Um aluno não pode ser matriculado duas vezes na mesma matéria</span>
-            </li>
-          </ul>
-          <div className="mt-6 rounded-lg bg-minerva-cinza-claro px-4 py-3 text-xs text-minerva-cinza-escuro/70">
-            <strong>{alunos.length}</strong> alunos ·{' '}
-            {alunoSelecionado ? (
-              <>
-                <strong>{materiasDoCurso.length}</strong> matérias em{' '}
-                {alunoSelecionado.curso.nome}
-              </>
-            ) : (
-              <>
-                selecione um aluno para ver as matérias do curso
-              </>
-            )}
-          </div>
-        </div>
+        <Card className="h-fit">
+          <CardHeader>
+            <CardTitle className="flex items-center gap-2">
+              <ListChecks className="h-4 w-4 text-minerva-dourado" />
+              Antes de matricular
+            </CardTitle>
+          </CardHeader>
+          <CardContent>
+            <ul className="space-y-3 text-sm text-muted-foreground">
+              <li className="flex gap-2">
+                <span className="font-bold text-primary">1.</span>
+                <span>
+                  Cadastre{' '}
+                  <Link to="/alunos" className="font-semibold text-primary hover:underline">
+                    alunos
+                  </Link>{' '}
+                  vinculados a um curso
+                </span>
+              </li>
+              <li className="flex gap-2">
+                <span className="font-bold text-primary">2.</span>
+                <span>
+                  Cadastre{' '}
+                  <Link to="/materias" className="font-semibold text-primary hover:underline">
+                    matérias
+                  </Link>{' '}
+                  do mesmo curso
+                </span>
+              </li>
+              <li className="flex gap-2">
+                <span className="font-bold text-primary">3.</span>
+                <span>Um aluno não pode ser matriculado duas vezes na mesma matéria</span>
+              </li>
+            </ul>
+            <div className="mt-6 rounded-lg bg-muted px-4 py-3 text-xs text-muted-foreground">
+              <strong>{alunos.length}</strong> alunos ·{' '}
+              {alunoSelecionado ? (
+                <>
+                  <strong>{materiasDoCurso.length}</strong> matérias em{' '}
+                  {alunoSelecionado.curso.nome}
+                </>
+              ) : (
+                <>selecione um aluno para ver as matérias do curso</>
+              )}
+            </div>
+          </CardContent>
+        </Card>
       </section>
 
       <section>
         <div className="mb-4 flex flex-wrap items-end justify-between gap-4">
           <div>
             <h2 className="font-display text-lg font-semibold">Matrículas registradas</h2>
-            <p className="text-sm text-minerva-cinza-escuro/65">
+            <p className="text-sm text-muted-foreground">
               {matriculasFiltradas.length} registro(s) exibido(s)
             </p>
           </div>
-          <input
-            type="search"
-            placeholder="Buscar aluno, matéria ou curso…"
-            value={filtro}
-            onChange={(e) => setFiltro(e.target.value)}
-            className="minerva-input mt-0 w-full max-w-xs"
-          />
+          <div className="relative w-full max-w-xs">
+            <Search className="pointer-events-none absolute top-1/2 left-2.5 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
+            <Input
+              type="search"
+              placeholder="Buscar aluno, matéria ou curso…"
+              value={filtro}
+              onChange={(e) => setFiltro(e.target.value)}
+              className="pl-8"
+            />
+          </div>
         </div>
 
         {matriculasFiltradas.length === 0 ? (
           <EmptyState
             titulo="Nenhuma matrícula encontrada"
             descricao="Cadastre a primeira matrícula usando o formulário acima ou ajuste o filtro de busca."
-            icone={<ClipboardDocumentListIcon className="h-7 w-7" />}
+            icone={<ClipboardList className="h-7 w-7" />}
           />
         ) : (
-          <div className="minerva-table-wrap overflow-x-auto">
-            <table className="minerva-table">
-              <thead>
-                <tr>
-                  <th>Aluno</th>
-                  <th>Matéria</th>
-                  <th>Curso</th>
-                  <th>Data</th>
-                  <th>Situação</th>
-                  <th>Nota</th>
-                  <th>Ações</th>
-                </tr>
-              </thead>
-              <tbody>
-                {matriculasFiltradas.map((m) => (
-                  <tr key={m.id}>
-                    <td>
-                      <p className="font-medium text-minerva-cinza-escuro">{m.alunoNome}</p>
-                      <p className="text-xs text-minerva-cinza-escuro/50">ID {m.alunoId}</p>
-                    </td>
-                    <td>{m.materiaNome}</td>
-                    <td className="text-minerva-cinza-escuro/75">{m.cursoNome}</td>
-                    <td>{m.dataCriacao}</td>
-                    <td>
-                      <BadgeSituacao situacao={m.situacao} />
-                    </td>
-                    <td>
-                      {m.nota != null ? (
-                        <span className="font-semibold text-minerva-cinza-escuro">
-                          {m.nota.toFixed(1)}
-                        </span>
-                      ) : (
-                        <span className="text-minerva-cinza-escuro/40">—</span>
-                      )}
-                    </td>
-                    <td>
-                      <div className="flex flex-wrap gap-2">
-                        {m.situacao === 'ATIVA' ? (
-                          <button
+          <Card className="gap-0 overflow-hidden p-0">
+            <CardContent className="p-0">
+              <Table>
+                <TableHeader>
+                  <TableRow className="bg-muted/50 hover:bg-muted/50">
+                    <TableHead className="px-4">Aluno</TableHead>
+                    <TableHead className="px-4">Matéria</TableHead>
+                    <TableHead className="px-4">Curso</TableHead>
+                    <TableHead className="px-4">Data</TableHead>
+                    <TableHead className="px-4">Situação</TableHead>
+                    <TableHead className="px-4">Nota</TableHead>
+                    <TableHead className="px-4 text-right">Ações</TableHead>
+                  </TableRow>
+                </TableHeader>
+                <TableBody>
+                  {matriculasFiltradas.map((m) => (
+                    <TableRow key={m.id}>
+                      <TableCell className="px-4 py-3">
+                        <p className="font-medium">{m.alunoNome}</p>
+                        <p className="text-xs text-muted-foreground">ID {m.alunoId}</p>
+                      </TableCell>
+                      <TableCell className="px-4 py-3">{m.materiaNome}</TableCell>
+                      <TableCell className="px-4 py-3 text-muted-foreground">
+                        {m.cursoNome}
+                      </TableCell>
+                      <TableCell className="px-4 py-3">{m.dataCriacao}</TableCell>
+                      <TableCell className="px-4 py-3">
+                        <BadgeSituacao situacao={m.situacao} />
+                      </TableCell>
+                      <TableCell className="px-4 py-3">
+                        {m.nota != null ? (
+                          <span className="font-semibold">{m.nota.toFixed(1)}</span>
+                        ) : (
+                          <span className="text-muted-foreground/50">—</span>
+                        )}
+                      </TableCell>
+                      <TableCell className="px-4 py-3">
+                        <div className="flex justify-end gap-1.5">
+                          {m.situacao === 'ATIVA' ? (
+                            <Button
+                              type="button"
+                              variant="outline"
+                              size="sm"
+                              onClick={() => handleAlterarSituacao(m.id, 'CONCLUIDA')}
+                            >
+                              <CheckCircle2 />
+                              Concluir
+                            </Button>
+                          ) : null}
+                          <Button
                             type="button"
-                            onClick={() => handleAlterarSituacao(m.id, 'CONCLUIDA')}
-                            className="text-xs font-semibold text-sky-700 hover:underline"
+                            variant="destructive"
+                            size="sm"
+                            onClick={() => handleExcluir(m.id, m.alunoNome)}
                           >
-                            Concluir
-                          </button>
-                        ) : null}
-                        <button
-                          type="button"
-                          onClick={() => handleExcluir(m.id, m.alunoNome)}
-                          className="text-xs font-semibold text-primary hover:underline"
-                        >
-                          Excluir
-                        </button>
-                      </div>
-                    </td>
-                  </tr>
-                ))}
-              </tbody>
-            </table>
-          </div>
+                            <Trash2 />
+                            Excluir
+                          </Button>
+                        </div>
+                      </TableCell>
+                    </TableRow>
+                  ))}
+                </TableBody>
+              </Table>
+            </CardContent>
+          </Card>
         )}
       </section>
     </PageContainer>

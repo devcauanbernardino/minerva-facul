@@ -13,11 +13,9 @@ type PageHeaderProps = {
 
 export function PageHeader({ titulo, subtitulo, acao }: PageHeaderProps) {
   return (
-    <div className="mb-8 flex flex-wrap items-start justify-between gap-4">
-      <div className="space-y-2">
-        <p className="text-xs font-semibold uppercase tracking-[0.2em] text-minerva-dourado">
-          Minerva
-        </p>
+    <div className="mb-8 flex flex-wrap items-start justify-between gap-4 minerva-animate-in">
+      <div className="space-y-2.5">
+        <p className="minerva-eyebrow">Minerva</p>
         <h1 className="font-display text-2xl font-bold tracking-tight sm:text-3xl">
           {titulo}
         </h1>
@@ -35,7 +33,7 @@ export function PageHeader({ titulo, subtitulo, acao }: PageHeaderProps) {
           </Link>
         </Button>
       </div>
-      <Separator className="basis-full" />
+      <Separator className="basis-full bg-gradient-to-r from-minerva-dourado/40 via-border to-transparent" />
     </div>
   )
 }

@@ -6,8 +6,11 @@
 
 @theme {
   --color-minerva-romano: #8b1e1e;
+  --color-minerva-vinho: #4f0d0d;
   --color-minerva-dourado: #d4af37;
+  --color-minerva-dourado-claro: #f3e3b3;
   --color-minerva-marmore: #ffffff;
+  --color-minerva-creme: #f8f1e1;
   --color-minerva-cinza-claro: #f2f2f2;
   --color-minerva-cinza-escuro: #2e2e2e;
   --font-display: "Cinzel", ui-serif, Georgia, "Times New Roman", serif;
@@ -61,37 +64,37 @@
   color-scheme: light;
 
   /* shadcn tokens mapeados para a paleta Minerva */
-  --background: #f2f2f2;
-  --foreground: #2e2e2e;
-  --card: #ffffff;
-  --card-foreground: #2e2e2e;
-  --popover: #ffffff;
-  --popover-foreground: #2e2e2e;
+  --background: #f1efe9;
+  --foreground: #2e2620;
+  --card: #fcfbf8;
+  --card-foreground: #2e2620;
+  --popover: #fcfbf8;
+  --popover-foreground: #2e2620;
   --primary: #8b1e1e;
-  --primary-foreground: #ffffff;
-  --secondary: #ececec;
-  --secondary-foreground: #2e2e2e;
-  --muted: #ececec;
-  --muted-foreground: #64748b;
-  --accent: #f5ecd4;
-  --accent-foreground: #2e2e2e;
+  --primary-foreground: #fffdf7;
+  --secondary: #e9e4d8;
+  --secondary-foreground: #2e2620;
+  --muted: #e9e4d8;
+  --muted-foreground: #756a58;
+  --accent: #efe9da;
+  --accent-foreground: #4f0d0d;
   --destructive: #dc2626;
-  --border: #e0e0e0;
-  --input: #e0e0e0;
+  --border: #e1dccf;
+  --input: #e1dccf;
   --ring: #8b1e1e;
   --chart-1: #8b1e1e;
   --chart-2: #d4af37;
   --chart-3: #059669;
   --chart-4: #0284c7;
   --chart-5: #64748b;
-  --radius: 0.625rem;
-  --sidebar: #ffffff;
-  --sidebar-foreground: #2e2e2e;
+  --radius: 0.75rem;
+  --sidebar: #fffdf7;
+  --sidebar-foreground: #2e2620;
   --sidebar-primary: #8b1e1e;
-  --sidebar-primary-foreground: #ffffff;
+  --sidebar-primary-foreground: #fffdf7;
   --sidebar-accent: #f5ecd4;
-  --sidebar-accent-foreground: #2e2e2e;
-  --sidebar-border: #e0e0e0;
+  --sidebar-accent-foreground: #4f0d0d;
+  --sidebar-border: #e6dac0;
   --sidebar-ring: #8b1e1e;
 }
 
@@ -108,6 +111,11 @@
     @apply bg-background text-foreground antialiased;
     margin: 0;
     min-height: 100vh;
+    background-image:
+      radial-gradient(ellipse 80% 50% at 50% -10%, color-mix(in srgb, var(--color-minerva-dourado) 7%, transparent), transparent),
+      radial-gradient(circle at 100% 0%, color-mix(in srgb, var(--primary) 4%, transparent), transparent 45%),
+      radial-gradient(circle at 0% 100%, color-mix(in srgb, var(--primary) 3%, transparent), transparent 40%);
+    background-attachment: fixed;
   }
 
   h1,
@@ -141,11 +149,11 @@
 
 @layer components {
   .minerva-card {
-    @apply rounded-xl bg-card text-card-foreground shadow-sm ring-1 ring-foreground/10;
+    @apply relative rounded-2xl bg-card text-card-foreground shadow-sm ring-1 ring-foreground/10;
   }
 
   .minerva-card-hover {
-    @apply rounded-xl bg-card text-card-foreground shadow-sm ring-1 ring-foreground/10 transition hover:ring-primary/25 hover:shadow-md;
+    @apply relative rounded-2xl bg-card text-card-foreground shadow-sm ring-1 ring-foreground/10 transition-all duration-300 hover:-translate-y-0.5 hover:shadow-lg hover:shadow-primary/10 hover:ring-minerva-dourado/40;
   }
 
   .minerva-input {
@@ -161,7 +169,7 @@
   }
 
   .minerva-table-wrap {
-    @apply overflow-hidden rounded-xl bg-card shadow-sm ring-1 ring-foreground/10;
+    @apply overflow-hidden rounded-2xl bg-card shadow-sm ring-1 ring-foreground/10;
   }
 
   .minerva-table {
@@ -185,6 +193,83 @@
   }
 
   .minerva-hero {
-    @apply relative overflow-hidden rounded-2xl border border-primary/15 bg-gradient-to-br from-primary via-primary/95 to-primary/80 p-8 text-primary-foreground shadow-lg;
+    @apply relative overflow-hidden rounded-2xl border border-primary/15 bg-gradient-to-br from-minerva-vinho via-primary to-primary/85 p-8 text-primary-foreground shadow-lg shadow-primary/20;
+  }
+
+  .minerva-hero::before {
+    content: "";
+    @apply pointer-events-none absolute inset-0;
+    background-image: repeating-linear-gradient(
+      135deg,
+      color-mix(in srgb, var(--color-minerva-dourado) 8%, transparent) 0px,
+      color-mix(in srgb, var(--color-minerva-dourado) 8%, transparent) 1px,
+      transparent 1px,
+      transparent 14px
+    );
+    opacity: 0.4;
+  }
+
+  .minerva-hero::after {
+    content: "";
+    @apply pointer-events-none absolute -bottom-1 left-0 right-0 h-[3px];
+    background-image: linear-gradient(
+      90deg,
+      transparent,
+      var(--color-minerva-dourado),
+      transparent
+    );
+  }
+
+  /* Eyebrow / kicker label usado nos cabeçalhos das páginas */
+  .minerva-eyebrow {
+    @apply inline-flex items-center gap-2 text-xs font-semibold uppercase tracking-[0.25em] text-minerva-dourado;
+  }
+
+  .minerva-eyebrow::before {
+    content: "";
+    @apply h-px w-5 bg-minerva-dourado/60;
+  }
+
+  /* Divisor ornamental com losango central, remete a frisos romanos */
+  .minerva-divider {
+    @apply my-8 flex items-center gap-3 text-minerva-dourado/60;
+  }
+
+  .minerva-divider::before,
+  .minerva-divider::after {
+    content: "";
+    @apply h-px flex-1 bg-gradient-to-r from-transparent via-minerva-dourado/40 to-transparent;
+  }
+
+  .minerva-divider > span {
+    @apply h-2 w-2 rotate-45 border border-minerva-dourado/50 bg-minerva-dourado/20;
+  }
+
+  /* Animações de entrada suaves para conteúdo das páginas */
+  @keyframes minerva-fade-in-up {
+    from {
+      opacity: 0;
+      transform: translateY(12px);
+    }
+    to {
+      opacity: 1;
+      transform: translateY(0);
+    }
+  }
+
+  .minerva-animate-in {
+    animation: minerva-fade-in-up 0.5s ease-out both;
+  }
+
+  .minerva-animate-in-delay-1 {
+    animation: minerva-fade-in-up 0.5s ease-out 0.08s both;
+  }
+
+  .minerva-animate-in-delay-2 {
+    animation: minerva-fade-in-up 0.5s ease-out 0.16s both;
+  }
+
+  .minerva-animate-in-delay-3 {
+    animation: minerva-fade-in-up 0.5s ease-out 0.24s both;
   }
 }

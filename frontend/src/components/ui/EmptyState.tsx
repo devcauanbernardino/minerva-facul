@@ -8,10 +8,10 @@ type EmptyStateProps = {
 
 export function EmptyState({ titulo, descricao, icone }: EmptyStateProps) {
   return (
-    <Card className="border-dashed bg-card/60 px-8 py-14 shadow-none">
+    <Card className="border-dashed border-minerva-dourado/30 bg-card/60 px-8 py-14 shadow-none minerva-animate-in">
       <CardContent className="flex flex-col items-center justify-center px-0 text-center">
         {icone ? (
-          <div className="mb-4 flex h-14 w-14 items-center justify-center rounded-full bg-muted text-primary">
+          <div className="mb-4 flex h-14 w-14 items-center justify-center rounded-full bg-minerva-dourado/10 text-primary ring-1 ring-minerva-dourado/30">
             {icone}
           </div>
         ) : null}

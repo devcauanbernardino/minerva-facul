@@ -1,5 +1,29 @@
-import { useEffect, useState } from 'react'
+import { useEffect, useMemo, useState } from 'react'
+import { Clock3, GraduationCap, Layers, Plus, Trash2 } from 'lucide-react'
 import { AlertaErro, AlertaSucesso, PageHeader } from '../components/PageHeader'
+import { Button } from '@/components/ui/button'
+import {
+  Card,
+  CardContent,
+  CardDescription,
+  CardHeader,
+  CardTitle,
+} from '@/components/ui/card'
+import { Input } from '@/components/ui/input'
+import { Label } from '@/components/ui/label'
+import {
+  Table,
+  TableBody,
+  TableCell,
+  TableHead,
+  TableHeader,
+  TableRow,
+} from '@/components/ui/table'
+import { Badge } from '@/components/ui/badge'
+import { EmptyState } from '../components/ui/EmptyState'
+import { LoadingState } from '../components/ui/LoadingState'
+import { PageContainer } from '../components/ui/PageContainer'
+import { StatCard } from '../components/ui/StatCard'
 import { api } from '../services/api'
 import type { Curso } from '../types/curso'
 import { mensagemErroApi } from '../utils/apiError'
@@ -29,6 +53,15 @@ export function Cursos() {
   useEffect(() => {
     carregar()
   }, [])
+
+  const stats = useMemo(() => {
+    const lista = cursos ?? []
+    const mediaCarga =
+      lista.length > 0
+        ? Math.round(lista.reduce((soma, c) => soma + c.cargaHoraria, 0) / lista.length)
+        : 0
+    return { total: lista.length, mediaCarga }
+  }, [cursos])
 
   function handleSubmit(e: React.FormEvent) {
     e.preventDefault()
@@ -64,7 +97,7 @@ export function Cursos() {
   }
 
   return (
-    <div className="mx-auto max-w-4xl px-4 py-10">
+    <PageContainer>
       <PageHeader
         titulo="Cursos"
         subtitulo="Cadastro e listagem de cursos da instituição."
@@ -73,98 +106,142 @@ export function Cursos() {
       {erro ? <AlertaErro mensagem={erro} /> : null}
       {sucesso ? <AlertaSucesso mensagem={sucesso} /> : null}
 
-      <section className="mb-10 rounded-xl border border-minerva-cinza-escuro/10 bg-minerva-marmore p-6 shadow-sm">
-        <h2 className="mb-4 text-lg font-semibold">Novo curso</h2>
-        <form
-          onSubmit={handleSubmit}
-          className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4"
-        >
-          <div className="sm:col-span-2">
-            <label className="block text-sm font-medium">Nome</label>
-            <input
-              value={nome}
-              onChange={(e) => setNome(e.target.value)}
-              required
-              placeholder="Ex.: Engenharia de Software"
-              className="mt-1 w-full rounded-lg border border-minerva-cinza-escuro/15 bg-white px-3 py-2 text-sm outline-none focus:border-primary focus:ring-2 focus:ring-primary/20"
-            />
-          </div>
-          <div>
-            <label className="block text-sm font-medium">Carga horária</label>
-            <input
-              type="number"
-              min={1}
-              value={cargaHoraria}
-              onChange={(e) => setCargaHoraria(e.target.value)}
-              required
-              className="mt-1 w-full rounded-lg border border-minerva-cinza-escuro/15 bg-white px-3 py-2 text-sm outline-none focus:border-primary focus:ring-2 focus:ring-primary/20"
-            />
-          </div>
-          <div>
-            <label className="block text-sm font-medium">Semestres</label>
-            <input
-              type="number"
-              min={1}
-              value={duracaoSemestres}
-              onChange={(e) => setDuracaoSemestres(e.target.value)}
-              required
-              className="mt-1 w-full rounded-lg border border-minerva-cinza-escuro/15 bg-white px-3 py-2 text-sm outline-none focus:border-primary focus:ring-2 focus:ring-primary/20"
-            />
-          </div>
-          <div className="sm:col-span-2 lg:col-span-4">
-            <button
-              type="submit"
-              disabled={enviando}
-              className="rounded-lg bg-primary px-6 py-2.5 text-sm font-semibold uppercase tracking-[0.12em] text-minerva-marmore hover:bg-primary/90 disabled:opacity-60"
-            >
-              {enviando ? 'Salvando...' : 'Cadastrar curso'}
-            </button>
-          </div>
-        </form>
-      </section>
+      <div className="mb-8 grid gap-4 sm:grid-cols-2">
+        <StatCard
+          titulo="Cursos"
+          valor={stats.total}
+          descricao="Cadastrados na instituição"
+          destaque
+        />
+        <StatCard
+          titulo="Carga horária média"
+          valor={stats.total > 0 ? `${stats.mediaCarga}h` : '—'}
+          descricao="Média entre os cursos"
+        />
+      </div>
 
-      {cursos === null && !erro ? (
-        <p className="text-minerva-cinza-escuro/60">Carregando…</p>
-      ) : null}
+      <Card className="mb-10">
+        <CardHeader>
+          <CardTitle className="flex items-center gap-2">
+            <Plus className="h-4 w-4 text-primary" />
+            Novo curso
+          </CardTitle>
+          <CardDescription>
+            Informe nome, carga horária total e duração em semestres.
+          </CardDescription>
+        </CardHeader>
+        <CardContent>
+          <form onSubmit={handleSubmit} className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
+            <div className="space-y-1.5 sm:col-span-2">
+              <Label htmlFor="curso-nome">Nome</Label>
+              <Input
+                id="curso-nome"
+                value={nome}
+                onChange={(e) => setNome(e.target.value)}
+                required
+                placeholder="Ex.: Engenharia de Software"
+              />
+            </div>
+            <div className="space-y-1.5">
+              <Label htmlFor="curso-carga">Carga horária</Label>
+              <Input
+                id="curso-carga"
+                type="number"
+                min={1}
+                value={cargaHoraria}
+                onChange={(e) => setCargaHoraria(e.target.value)}
+                required
+                placeholder="3200"
+              />
+            </div>
+            <div className="space-y-1.5">
+              <Label htmlFor="curso-semestres">Semestres</Label>
+              <Input
+                id="curso-semestres"
+                type="number"
+                min={1}
+                value={duracaoSemestres}
+                onChange={(e) => setDuracaoSemestres(e.target.value)}
+                required
+                placeholder="8"
+              />
+            </div>
+            <div className="sm:col-span-2 lg:col-span-4">
+              <Button type="submit" size="lg" disabled={enviando} className="px-6">
+                <Plus />
+                {enviando ? 'Salvando…' : 'Cadastrar curso'}
+              </Button>
+            </div>
+          </form>
+        </CardContent>
+      </Card>
+
+      {cursos === null && !erro ? <LoadingState mensagem="Carregando cursos…" /> : null}
 
       {cursos && cursos.length === 0 ? (
-        <p className="text-minerva-cinza-escuro/85">Nenhum curso cadastrado ainda.</p>
+        <EmptyState
+          titulo="Nenhum curso cadastrado"
+          descricao="Use o formulário acima para cadastrar o primeiro curso da instituição."
+          icone={<GraduationCap className="h-7 w-7" />}
+        />
       ) : null}
 
       {cursos && cursos.length > 0 ? (
-        <div className="overflow-hidden rounded-xl border border-minerva-cinza-escuro/10 bg-minerva-marmore shadow-md">
-          <table className="w-full text-left text-sm">
-            <thead className="bg-minerva-cinza-claro text-minerva-cinza-escuro/75">
-              <tr>
-                <th className="px-4 py-3 font-semibold">Id</th>
-                <th className="px-4 py-3 font-semibold">Nome</th>
-                <th className="px-4 py-3 font-semibold">Carga horária</th>
-                <th className="px-4 py-3 font-semibold">Semestres</th>
-                <th className="px-4 py-3 font-semibold">Ações</th>
-              </tr>
-            </thead>
-            <tbody className="divide-y divide-minerva-cinza-escuro/10">
-              {cursos.map((c) => (
-                <tr key={c.id}>
-                  <td className="px-4 py-3">{c.id}</td>
-                  <td className="px-4 py-3 font-medium">{c.nome}</td>
-                  <td className="px-4 py-3">{c.cargaHoraria}</td>
-                  <td className="px-4 py-3">{c.duracaoSemestres}</td>
-                  <td className="px-4 py-3">
-                    <button
-                      type="button"
-                      onClick={() => handleExcluir(c.id)}
-                      className="text-sm font-semibold text-primary hover:underline"
-                    >
-                      Excluir
-                    </button>
-                  </td>
-                </tr>
-              ))}
-            </tbody>
-          </table>
-        </div>
+        <Card className="gap-0 overflow-hidden p-0">
+          <CardHeader className="border-b p-6 [.border-b]:pb-4">
+            <CardTitle>Cursos cadastrados</CardTitle>
+            <CardDescription>
+              {cursos.length} curso{cursos.length !== 1 ? 's' : ''} registrado
+              {cursos.length !== 1 ? 's' : ''}
+            </CardDescription>
+          </CardHeader>
+          <CardContent className="p-0">
+            <Table>
+              <TableHeader>
+                <TableRow className="bg-muted/50 hover:bg-muted/50">
+                  <TableHead className="px-4">Curso</TableHead>
+                  <TableHead className="px-4">Carga horária</TableHead>
+                  <TableHead className="px-4">Duração</TableHead>
+                  <TableHead className="px-4 text-right">Ações</TableHead>
+                </TableRow>
+              </TableHeader>
+              <TableBody>
+                {cursos.map((c) => (
+                  <TableRow key={c.id}>
+                    <TableCell className="px-4 py-3">
+                      <p className="font-medium">{c.nome}</p>
+                      <p className="text-xs text-muted-foreground">ID {c.id}</p>
+                    </TableCell>
+                    <TableCell className="px-4 py-3">
+                      <Badge variant="secondary" className="gap-1 font-medium">
+                        <Clock3 className="h-3 w-3" />
+                        {c.cargaHoraria}h
+                      </Badge>
+                    </TableCell>
+                    <TableCell className="px-4 py-3">
+                      <Badge variant="outline" className="gap-1 font-medium">
+                        <Layers className="h-3 w-3" />
+                        {c.duracaoSemestres} semestres
+                      </Badge>
+                    </TableCell>
+                    <TableCell className="px-4 py-3 text-right">
+                      <Button
+                        type="button"
+                        variant="destructive"
+                        size="sm"
+                        onClick={() => handleExcluir(c.id)}
+                      >
+                        <Trash2 />
+                        Excluir
+                      </Button>
+                    </TableCell>
+                  </TableRow>
+                ))}
+              </TableBody>
+            </Table>
+          </CardContent>
+        </Card>
       ) : null}
-    </div>
+    </PageContainer>
   )
 }
