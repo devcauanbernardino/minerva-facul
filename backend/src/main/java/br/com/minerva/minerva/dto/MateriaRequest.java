@@ -7,13 +7,12 @@ import lombok.Data;
 import lombok.NoArgsConstructor;
 
 @Data
-@NoArgsConstructor
 @AllArgsConstructor
+@NoArgsConstructor
 public class MateriaRequest {
+    @NotBlank(message = "O nome da matéria é obrigatório")
+    private String nome;
 
-	@NotBlank(message = "O nome da matéria é obrigatório")
-	private String nome;
-
-	@NotNull(message = "O ID do curso é obrigatório")
-	private Long cursoId;
+    @NotNull(message = "O curso é obrigatório")
+    private Long cursoId;
 }
