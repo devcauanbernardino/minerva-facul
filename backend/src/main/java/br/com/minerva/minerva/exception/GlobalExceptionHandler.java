@@ -36,6 +36,17 @@ public class GlobalExceptionHandler {
 		return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(body);
 	}
 
+	@ExceptionHandler(MatriculaDuplicadaException.class)
+	public ResponseEntity<ErroResponse> matriculaDuplicada(MatriculaDuplicadaException ex) {
+		ErroResponse body = ErroResponse.builder()
+			.timestamp(Instant.now())
+			.status(HttpStatus.CONFLICT.value())
+			.erro("Conflito")
+			.mensagem(ex.getMessage())
+			.build();
+		return ResponseEntity.status(HttpStatus.CONFLICT).body(body);
+	}
+
 	@ExceptionHandler(RecursoNaoEncontradoException.class)
 	public ResponseEntity<ErroResponse> recursoNaoEncontrado(RecursoNaoEncontradoException ex) {
 		ErroResponse body = ErroResponse.builder()

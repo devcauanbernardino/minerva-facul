@@ -14,4 +14,6 @@ public interface MatriculaRepository extends JpaRepository<Matricula, Long> {
 	List<Matricula> findByMateriaId(Long materiaId);
 	
 	Optional<Matricula> findByAlunoIdAndMateriaId(long alunoId, Long materiaId);
+
+	boolean existsByAlunoIdAndMateriaId(Long alunoId, Long materiaId);
 }

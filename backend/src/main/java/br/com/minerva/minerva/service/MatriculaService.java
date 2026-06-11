@@ -7,6 +7,7 @@ import org.springframework.transaction.annotation.Transactional;
 import br.com.minerva.minerva.dto.MatriculaRequest;
 import br.com.minerva.minerva.dto.MatriculaResponse;
 import br.com.minerva.minerva.dto.NotasRequest;
+import br.com.minerva.minerva.exception.MatriculaDuplicadaException;
 import br.com.minerva.minerva.exception.RecursoNaoEncontradoException;
 import br.com.minerva.minerva.model.Aluno;
 import br.com.minerva.minerva.model.Materia;
@@ -51,8 +52,8 @@ public class MatriculaService {
         Materia materia = materiaRepository.findById(request.getMateriaId())
                 .orElseThrow(() -> new RecursoNaoEncontradoException("Materia não encontrada com id: " + request.getMateriaId()));
 
-        if (matriculaRepository.findByAlunoIdAndMateriaId(aluno.getId(), materia.getId()).isPresent()) {
-            throw new IllegalStateException("Aluno já está matriculado nessa disciplina.");
+        if (matriculaRepository.existsByAlunoIdAndMateriaId(aluno.getId(), materia.getId())) {
+            throw new MatriculaDuplicadaException("Este aluno já está matriculado nesta matéria.");
         }
 
         Matricula matricula = new Matricula();

@@ -85,9 +85,9 @@ public class AlunoService {
     @Transactional
     public BoletimResponse obterBoletimPorEmail(String email) {
         Aluno aluno = buscarOuSincronizarPorEmail(email);
-        List<MatriculaService> matriculas = matriculaRepository.findByAlunoId(aluno.getId());
-        Map<Long, MatriculaService> matriculaPorMateria = new HashMap<>();
-        for (MatriculaService matricula : matriculas) {
+        List<Matricula> matriculas = matriculaRepository.findByAlunoId(aluno.getId());
+        Map<Long, Matricula> matriculaPorMateria = new HashMap<>();
+        for (Matricula matricula : matriculas) {
             matriculaPorMateria.put(matricula.getMateria().getId(), matricula);
         }
 
@@ -95,7 +95,7 @@ public class AlunoService {
             .findByCursoIdOrderByNomeAsc(aluno.getCurso().getId())
             .stream()
             .map(materia -> {
-                MatriculaService matricula = matriculaPorMateria.get(materia.getId());
+                Matricula matricula = matriculaPorMateria.get(materia.getId());
                 if (matricula == null) {
                     return new DisciplinaAcademicaResponse(
                         materia.getId(), materia.getNome(), "DISPONIVEL", null, null);
@@ -107,8 +107,8 @@ public class AlunoService {
                     materia.getId(),
                     materia.getNome(),
                     normalizarSituacao(matricula.getSituacao()),
-                    null,
-                    null);
+                    matricula.getNota(),
+                    matricula.getFrequencia());
             })
             .filter(item -> item != null)
             .toList();
@@ -126,8 +126,8 @@ public class AlunoService {
                 matricula.getMateria().getId(),
                 matricula.getMateria().getNome(),
                 normalizarSituacao(matricula.getSituacao()),
-                null,
-                null))
+                matricula.getNota(),
+                matricula.getFrequencia()))
             .toList();
 
         return montarResumoAcademico(aluno, disciplinas, HistoricoResponse.class);
