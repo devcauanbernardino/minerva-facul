@@ -24,6 +24,9 @@ public class MatriculaService {
     private final MateriaRepository materiaRepository;
     private final MatriculaRepository matriculaRepository;
 
+    private static final double NOTA_MINIMA_APROVACAO = 6.0;
+    private static final double FREQUENCIA_MINIMA_APROVACAO = 75.0;
+
     @Transactional(readOnly = true)
     public List<MatriculaResponse> listarTodas() {
         return matriculaRepository.findAll().stream().map(this::paraResponse).toList();
@@ -67,6 +70,7 @@ public class MatriculaService {
         Matricula matricula = buscarEntidade(id);
         matricula.setNota(request.getNota());
         matricula.setFrequencia(request.getFrequencia());
+        matricula.setSituacao(calcularSituacaoFinal(matricula));
         return paraResponse(matriculaRepository.save(matricula));
     }
 
@@ -103,5 +107,13 @@ public class MatriculaService {
 
     private String normalizarSituacao(String situacao) {
         return situacao == null ? "ATIVA" : situacao.trim().toUpperCase();
+    }
+
+    private String calcularSituacaoFinal(Matricula matricula){
+        if (matricula.getNota() == null || matricula.getFrequencia() == null){
+            return matricula.getSituacao();
+        }
+        boolean aprovado = matricula.getNota() >= NOTA_MINIMA_APROVACAO && matricula.getFrequencia() >= FREQUENCIA_MINIMA_APROVACAO;
+            return aprovado ? "APROVADO" : "REPROVADO";
     }
 }

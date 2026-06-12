@@ -1,6 +1,9 @@
 package br.com.minerva.minerva.service;
 
+import java.util.ArrayList;
+import java.util.HashSet;
 import java.util.List;
+import java.util.Set;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -14,6 +17,8 @@ import lombok.RequiredArgsConstructor;
 @RequiredArgsConstructor
 public class ProfessorService {
     private final ProfessorRepository professorRepository;
+    private final MateriaRepository materiaRepository;
+    private final MatriculaRepository matriculaRepository;
     private final PasswordEncoder passwordEncoder;
 
     @Transactional(readOnly = true)
@@ -52,6 +57,32 @@ public class ProfessorService {
         return paraResponse(professorRepository.save(p));
     }
 
+    @Transactional(readOnly = true)
+    public List<MatriculaResponse> listarMatriculasDasTurmas(String email) {
+        Professor professor = professorRepository.findByEmail(email)
+            .orElseThrow(() -> new RecursoNaoEncontradoException("Professor não encontrado para o e-mail: " + email));
+
+        List<MatriculaResponse> resposta = new ArrayList<>();
+        for (Materia materia : professor.getMaterias()) {
+            List<Matricula> matriculas = matriculaRepository.findByMateriaId(materia.getId());
+            for (Matricula matricula : matriculas) {
+                resposta.add(paraResponse(matricula));
+            }
+        }
+        return resposta;
+    }
+
+    @Transactional
+    public ProfessorResponse vincularMaterias(Long id, ProfessorMateriaRequest request) {
+        Professor professor = buscarEntidade(id);
+        List<Materia> materias = materiaRepository.findAllById(request.getMateriaIds());
+        if (materias.size() != request.getMateriaIds().size()) {
+            throw new RecursoNaoEncontradoException("Uma ou mais matérias informadas não foram encontradas.");
+        }
+        professor.setMaterias(materias);
+        return paraResponse(professorRepository.save(professor));
+    }
+
     @Transactional
     public void excluir(Long id) {
         professorRepository.delete(buscarEntidade(id));
@@ -73,6 +104,19 @@ public class ProfessorService {
     private Professor buscarEntidade(Long id) {
         return professorRepository.findById(id)
             .orElseThrow(() -> new RecursoNaoEncontradoException("Professor não encontrado com id: " + id));
+    }
+
+    private MatriculaResponse paraResponse(Matricula matricula) {
+        return new MatriculaResponse(
+            matricula.getId(),
+            matricula.getAluno().getNome(),
+            matricula.getMateria().getId(),
+            matricula.getMateria().getNome(),
+            matricula.getMateria().getCurso().getNome(),
+            matricula.getDataCriacao().format(java.time.format.DateTimeFormatter.ofPattern("dd/MM/yyyy")),
+            matricula.getSituacao(),
+            matricula.getNota(),
+            matricula.getFrequencia());
     }
 
     private ProfessorResponse paraResponse(Professor p) {

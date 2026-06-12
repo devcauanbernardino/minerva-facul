@@ -163,7 +163,7 @@ export function ProfessorNotas() {
     api
       .patch<Matricula>(`/matriculas/${edicao.matriculaId}/notas`, payload)
       .then(() => {
-        setSucesso('Notas lançadas com sucesso.')
+        setSucesso('Notas lançadas com sucesso. Disciplina foi encerrada automaticamente conforme o resultado.')
         setEdicao(null)
         return carregarTurmas()
       })
