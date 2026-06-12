@@ -50,9 +50,13 @@ public class MateriaService {
     }
      private Materia buscarEntidade(Long id){
       return materiaRepository.findById(id)
-         .orElseThrow(() -> new RecursoNaoEncontradoException("Matéria não encontada com id: " + id));
+         .orElseThrow(() -> new RecursoNaoEncontradoException("Matéria não encontrada com id: " + id));
     } 
      private MateriaResponse paraResponse(Materia m){
-        return new MateriaResponse(m.getId(), m.getNome());
+        return new MateriaResponse(
+            m.getId(),
+            m.getNome(),
+            m.getCurso().getId(),
+            m.getCurso().getNome());
      }
 }
