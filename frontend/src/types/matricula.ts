@@ -4,6 +4,8 @@ export type SituacaoMatricula =
   | 'CANCELADA'
   | 'REPROVADA'
   | 'TRANCADA'
+  | 'APROVADO'
+  | 'REPROVADO'
 
 export type Matricula = {
   id: number

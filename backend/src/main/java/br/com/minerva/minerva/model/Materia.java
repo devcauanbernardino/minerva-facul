@@ -25,4 +25,12 @@ public class Materia {
 
     @OneToMany(mappedBy = "materia")
     private List<Matricula> matriculas = new ArrayList<>();
+
+    @ManyToMany
+    @JoinTable(
+        name = "materia_prerequisito",
+        joinColumns = @JoinColumn(name = "materia_id"),
+        inverseJoinColumns = @JoinColumn(name = "prerequisito_id")
+    )
+    private List<Materia> prerequisitos = new ArrayList<>();
 }

@@ -5,7 +5,6 @@ import { api } from "../services/api";
 import { gerarMatricula } from "../utils/matricula";
 import type { Curso } from "../types/curso";
 import type { Materia } from "../types/materia";
-import { EyeIcon, EyeSlashIcon } from "@heroicons/react/24/outline";
 import { MinervaLogo } from "../components/MinervaLogo";
 
 export function Cadastro() {

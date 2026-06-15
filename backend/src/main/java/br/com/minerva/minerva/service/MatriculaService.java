@@ -58,6 +58,15 @@ public class MatriculaService {
             throw new IllegalStateException("Aluno já está matriculado nessa disciplina.");
         }
 
+        List<String> prerequisitosPendentes = materia.getPrerequisitos().stream()
+                .filter(pre -> !concluiuMateria(aluno.getId(), pre.getId()))
+                .map(Materia::getNome)
+                .toList();
+        if (!prerequisitosPendentes.isEmpty()) {
+            throw new IllegalStateException(
+                    "Aluno não cumpriu os pré-requisitos: " + String.join(", ", prerequisitosPendentes));
+        }
+
         Matricula matricula = new Matricula();
         matricula.setAluno(aluno);
         matricula.setMateria(materia);
@@ -103,6 +112,15 @@ public class MatriculaService {
                 normalizarSituacao(matricula.getSituacao()),
                 matricula.getNota(),
                 matricula.getFrequencia());
+    }
+
+    private boolean concluiuMateria(Long alunoId, Long materiaId) {
+        return matriculaRepository.findByAlunoIdAndMateriaId(alunoId, materiaId)
+                .map(m -> {
+                    String situacao = normalizarSituacao(m.getSituacao());
+                    return situacao.equals("CONCLUIDA") || situacao.equals("APROVADO");
+                })
+                .orElse(false);
     }
 
     private String normalizarSituacao(String situacao) {
