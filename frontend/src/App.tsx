@@ -7,6 +7,7 @@ import { cn } from '@/lib/utils'
 import { AlunoBoletim } from './pages/AlunoBoletim'
 import { AlunoHistorico } from './pages/AlunoHistorico'
 import { Alunos } from './pages/Alunos'
+import { Boletos } from './pages/Boletos'
 import { Cadastro } from './pages/Cadastro'
 import { Cursos } from './pages/Cursos'
 import { Inicio } from './pages/Inicio'
@@ -92,6 +93,7 @@ function AppShell() {
             <Route path="/professor/notas" element={<ProfessorNotas />} />
             <Route path="/aluno/boletim" element={<AlunoBoletim />} />
             <Route path="/aluno/historico" element={<AlunoHistorico />} />
+            <Route path="/financeiro" element={<Boletos />} />
             <Route path="/login" element={<Login />} />
             <Route path="/cadastro" element={<Cadastro />} />
             <Route path="*" element={<Navigate to="/" replace />} />

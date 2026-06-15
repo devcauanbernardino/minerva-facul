@@ -64,6 +64,7 @@ export const rotasPorPerfil: RotaConfig[] = [
   { to: '/professores', label: 'Professores', perfis: ['SECRETARIA'] },
   { to: '/materias', label: 'Matérias', perfis: ['SECRETARIA'] },
   { to: '/matriculas', label: 'Matrículas', perfis: ['SECRETARIA'] },
+  { to: '/financeiro', label: 'Financeiro', perfis: ['SECRETARIA', 'ALUNO'] },
   { to: '/professor/notas', label: 'Notas', perfis: ['PROFESSOR'] },
   { to: '/aluno/boletim', label: 'Boletim', perfis: ['ALUNO'] },
   { to: '/aluno/historico', label: 'Histórico', perfis: ['ALUNO'] },
