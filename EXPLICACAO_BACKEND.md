@@ -345,3 +345,41 @@ Com isso, as 6 regras de negócio do Tema 2 ficam assim:
 4. ✅ Aprovação/reprovação automática — JP
 5. ✅ Boletim/histórico com nota e frequência reais — Rodrigo + correção
 6. ❌ Boletos/financeiro — Augusto (pendente)
+
+---
+
+## 6. Divisão da apresentação
+
+### 🎤 Abertura (quem quiser puxar)
+- Contexto rápido: "Tema 2 — Gestão Acadêmica" tinha 6 regras de negócio, distribuímos entre o grupo.
+
+### 1️⃣ Rodrigo — Matrícula sem duplicidade + Boletim/Histórico
+- Mostrar: tentar matricular o mesmo aluno duas vezes na mesma matéria → erro 409 "Aluno já está matriculado nessa disciplina."
+- Explicar rapidamente o código (`findByAlunoIdAndMateriaId` + `IllegalStateException`)
+- Mostrar a tela de **Boletim** e **Histórico** do aluno, destacando que agora aparecem **nota e frequência reais** (e não mais em branco)
+
+### 2️⃣ JP — Cálculo automático de aprovação/reprovação
+- Mostrar a tela do professor lançando nota + frequência (`ProfessorNotas`)
+- Explicar a regra: nota ≥ 6.0 **e** frequência ≥ 75% → `APROVADO`, senão `REPROVADO`
+- Mostrar que, depois de lançar a nota, a matrícula sai da lista "ativas" do professor e a situação muda automaticamente (sem precisar de ação manual)
+
+### 3️⃣ Cauan — Pré-requisitos entre matérias
+- Mostrar a tela **Matérias**: cadastro de uma matéria selecionando pré-requisitos (checklist) e os badges na tabela
+- Mostrar o fluxo de erro: tentar matricular um aluno numa matéria cujo pré-requisito ele não cumpriu → erro 409 listando as matérias pendentes
+- Explicar rapidamente o relacionamento `materia_prerequisito` (tabela criada automaticamente)
+
+### 4️⃣ Augusto — Módulo financeiro (boletos)
+- Se já tiver algo pronto até a apresentação: mostrar gerar boleto, aluno ver pendência, secretaria marcar como pago
+- Se não tiver pronto: explicar o que **está planejado** (model `Boleto`, endpoints `GET/POST /boletos`, `PUT /boletos/{id}/pagar`, tela `/financeiro`) e que é a única regra ainda pendente
+
+### 🎬 Fluxo de demo sugerido (sequência única, ao vivo)
+1. Cadastrar/selecionar uma matéria com pré-requisito (Cauan)
+2. Tentar matricular aluno sem cumprir o pré-requisito → erro (Cauan)
+3. Tentar matricular o mesmo aluno duas vezes na mesma matéria → erro (Rodrigo)
+4. Professor lança notas → situação muda automaticamente (JP)
+5. Ver boletim/histórico do aluno com nota e situação corretas (Rodrigo)
+6. (Se pronto) Gerar e pagar um boleto (Augusto)
+
+Essa ordem segue a lógica do sistema (matricular → cursar → ser avaliado → ver
+resultado → financeiro), o que fica natural pra contar pro professor durante a
+apresentação.
