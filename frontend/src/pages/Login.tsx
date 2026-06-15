@@ -13,6 +13,7 @@ import { Label } from "@/components/ui/label";
 import { Card, CardContent } from "@/components/ui/card";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import { Separator } from "@/components/ui/separator";
+import { Checkbox } from "@/components/ui/checkbox";
 
 type LoginLocationState = {
   matricula?: string;
@@ -89,7 +90,7 @@ export function Login() {
   }
 
   return (
-    <div className="min-h-screen grid md:grid-cols-[45%_55%] bg-minerva-cinza-claro">
+    <div className="grid md:grid-cols-[45%_55%] bg-minerva-cinza-claro">
       <aside
         className="relative hidden md:flex flex-col justify-end overflow-hidden bg-primary p-12 text-minerva-marmore"
         style={{
@@ -113,7 +114,7 @@ export function Login() {
         </div>
       </aside>
 
-      <section className="flex flex-col items-center justify-center p-6">
+      <section className="flex min-h-dvh flex-col items-center justify-center p-6">
         <div className="mb-6 md:hidden">
           <MinervaLogo variant="md" linkToHome showWordmark />
         </div>
@@ -236,10 +237,7 @@ export function Login() {
             </div>
 
             <label className="flex items-center gap-2 text-sm text-muted-foreground">
-              <input
-                type="checkbox"
-                className="h-4 w-4 accent-primary"
-              />
+              <Checkbox />
               Manter conectado
             </label>
 

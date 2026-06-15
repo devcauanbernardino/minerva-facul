@@ -1,7 +1,7 @@
 import { useEffect, useMemo, useState } from 'react'
 import { Link } from 'react-router-dom'
 import { Award, Lightbulb, Plus, Users } from 'lucide-react'
-import { AlertaErro, AlertaSucesso, PageHeader } from '../components/PageHeader'
+import { AlertaErro, PageHeader } from '../components/PageHeader'
 import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
 import {
@@ -21,14 +21,6 @@ import {
   SelectTrigger,
   SelectValue,
 } from '@/components/ui/select'
-import {
-  Table,
-  TableBody,
-  TableCell,
-  TableHead,
-  TableHeader,
-  TableRow,
-} from '@/components/ui/table'
 import { EmptyState } from '../components/ui/EmptyState'
 import { LoadingState } from '../components/ui/LoadingState'
 import { PageContainer } from '../components/ui/PageContainer'
@@ -36,12 +28,13 @@ import { StatCard } from '../components/ui/StatCard'
 import { api } from '../services/api'
 import type { Aluno } from '../types/aluno'
 import type { Curso } from '../types/curso'
+import { useToast } from '../components/ui/Toast'
 
 export function Alunos() {
+  const { mostrarSucesso, mostrarErro } = useToast()
   const [alunos, setAlunos] = useState<Aluno[] | null>(null)
   const [cursos, setCursos] = useState<Curso[]>([])
   const [erro, setErro] = useState<string | null>(null)
-  const [sucesso, setSucesso] = useState<string | null>(null)
   const [nome, setNome] = useState('')
   const [email, setEmail] = useState('')
   const [senha, setSenha] = useState('')
@@ -74,6 +67,14 @@ export function Alunos() {
       })
   }, [])
 
+  const iniciais = (nome: string) =>
+    nome
+      .trim()
+      .split(/\s+/)
+      .slice(0, 2)
+      .map((parte) => parte[0]?.toUpperCase())
+      .join('')
+
   const stats = useMemo(() => {
     const lista = alunos ?? []
     return {
@@ -92,7 +93,6 @@ export function Alunos() {
     }
 
     setEnviando(true)
-    setSucesso(null)
     api
       .post<Aluno>('/alunos', {
         nome,
@@ -107,11 +107,10 @@ export function Alunos() {
         setEmail('')
         setSenha('')
         setBolsa(false)
-        setErro(null)
-        setSucesso('Aluno cadastrado com sucesso.')
+        mostrarSucesso('Aluno cadastrado com sucesso.')
       })
       .catch(() => {
-        setErro('Erro ao cadastrar aluno. Confira os dados e tente novamente.')
+        mostrarErro('Erro ao cadastrar aluno. Confira os dados e tente novamente.')
       })
       .finally(() => setEnviando(false))
   }
@@ -124,7 +123,6 @@ export function Alunos() {
       />
 
       {erro ? <AlertaErro mensagem={erro} /> : null}
-      {sucesso ? <AlertaSucesso mensagem={sucesso} /> : null}
 
       <div className="mb-8 grid gap-4 sm:grid-cols-3">
         <StatCard titulo="Alunos" valor={stats.total} descricao="Cadastrados no sistema" destaque />
@@ -244,50 +242,40 @@ export function Alunos() {
             icone={<Users className="h-7 w-7" />}
           />
         ) : (
-          <Card className="gap-0 overflow-hidden p-0">
-            <CardHeader className="border-b p-6 [.border-b]:pb-4">
-              <CardTitle>Alunos cadastrados</CardTitle>
-              <CardDescription>
-                {alunos.length} aluno{alunos.length !== 1 ? 's' : ''} no sistema
-              </CardDescription>
-            </CardHeader>
-            <CardContent className="p-0">
-              <Table>
-                <TableHeader>
-                  <TableRow className="bg-muted/50 hover:bg-muted/50">
-                    <TableHead className="px-4">Aluno</TableHead>
-                    <TableHead className="px-4">E-mail</TableHead>
-                    <TableHead className="px-4">Curso</TableHead>
-                    <TableHead className="px-4">Bolsa</TableHead>
-                  </TableRow>
-                </TableHeader>
-                <TableBody>
-                  {alunos.map((aluno) => (
-                    <TableRow key={aluno.id}>
-                      <TableCell className="px-4 py-3">
-                        <p className="font-medium">{aluno.nome}</p>
-                        <p className="text-xs text-muted-foreground">ID {aluno.id}</p>
-                      </TableCell>
-                      <TableCell className="px-4 py-3 text-muted-foreground">
-                        {aluno.email}
-                      </TableCell>
-                      <TableCell className="px-4 py-3">{aluno.curso.nome}</TableCell>
-                      <TableCell className="px-4 py-3">
-                        {aluno.bolsa ? (
-                          <Badge className="gap-1 bg-minerva-dourado/15 text-yellow-800">
-                            <Award className="h-3 w-3" />
-                            Bolsista
-                          </Badge>
-                        ) : (
-                          <span className="text-muted-foreground/50">—</span>
-                        )}
-                      </TableCell>
-                    </TableRow>
-                  ))}
-                </TableBody>
-              </Table>
-            </CardContent>
-          </Card>
+          <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
+            {alunos.map((aluno) => (
+              <Card key={aluno.id} className="gap-0 overflow-hidden p-0">
+                <CardContent className="space-y-3 p-5">
+                  <div className="flex items-start gap-3">
+                    <div className="flex h-11 w-11 shrink-0 items-center justify-center rounded-full bg-primary/10 font-display text-sm font-bold text-primary">
+                      {iniciais(aluno.nome)}
+                    </div>
+                    <div className="min-w-0 flex-1">
+                      <p className="truncate font-display text-base font-semibold leading-tight">
+                        {aluno.nome}
+                      </p>
+                      <p className="text-xs text-muted-foreground">
+                        {aluno.matricula ?? `ID ${aluno.id}`}
+                      </p>
+                      <p className="truncate text-xs text-muted-foreground">{aluno.email}</p>
+                    </div>
+                  </div>
+
+                  <div className="flex flex-wrap items-center gap-1.5">
+                    <Badge variant="outline" className="font-medium">
+                      {aluno.curso.nome}
+                    </Badge>
+                    {aluno.bolsa ? (
+                      <Badge className="gap-1 bg-minerva-dourado/15 text-yellow-800">
+                        <Award className="h-3 w-3" />
+                        Bolsista
+                      </Badge>
+                    ) : null}
+                  </div>
+                </CardContent>
+              </Card>
+            ))}
+          </div>
         )}
       </section>
     </PageContainer>
