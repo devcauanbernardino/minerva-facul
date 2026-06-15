@@ -1,5 +1,6 @@
 package br.com.minerva.minerva.dto;
 
+import java.util.List;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.NotNull;
 import lombok.AllArgsConstructor;
@@ -15,4 +16,6 @@ public class MateriaRequest {
 
     @NotNull(message = "O curso é obrigatório")
     private Long cursoId;
+
+    private List<Long> prerequisitoIds;
 }

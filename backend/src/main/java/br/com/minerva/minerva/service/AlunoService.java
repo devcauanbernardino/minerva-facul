@@ -19,7 +19,7 @@ import lombok.RequiredArgsConstructor;
 @RequiredArgsConstructor
 public class AlunoService {
 
-    private static final Set<String> SITUACOES_HISTORICO = Set.of("CONCLUIDA", "REPROVADA", "TRANCADA");
+    private static final Set<String> SITUACOES_HISTORICO = Set.of("CONCLUIDA", "REPROVADA", "TRANCADA", "APROVADO", "REPROVADO");
 
     private final AlunoRepository alunoRepository;
     private final UsuarioRepository usuarioRepository;
@@ -107,8 +107,8 @@ public class AlunoService {
                     materia.getId(),
                     materia.getNome(),
                     normalizarSituacao(matricula.getSituacao()),
-                    null,
-                    null);
+                    matricula.getNota(),
+                    matricula.getFrequencia());
             })
             .filter(item -> item != null)
             .toList();
@@ -126,8 +126,8 @@ public class AlunoService {
                 matricula.getMateria().getId(),
                 matricula.getMateria().getNome(),
                 normalizarSituacao(matricula.getSituacao()),
-                null,
-                null))
+                matricula.getNota(),
+                matricula.getFrequencia()))
             .toList();
 
         return montarResumoAcademico(aluno, disciplinas, HistoricoResponse.class);

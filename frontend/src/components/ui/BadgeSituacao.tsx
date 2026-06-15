@@ -12,7 +12,9 @@ const estilos: Record<string, string> = {
   DISPONIVEL: 'bg-slate-100 text-slate-600 hover:bg-slate-100',
   CONCLUIDA: 'bg-sky-100 text-sky-800 hover:bg-sky-100',
   APROVADA: 'bg-sky-100 text-sky-800 hover:bg-sky-100',
+  APROVADO: 'bg-sky-100 text-sky-800 hover:bg-sky-100',
   REPROVADA: 'bg-red-100 text-red-800 hover:bg-red-100',
+  REPROVADO: 'bg-red-100 text-red-800 hover:bg-red-100',
   TRANCADA: 'bg-amber-100 text-amber-800 hover:bg-amber-100',
   CANCELADA: 'bg-zinc-100 text-zinc-600 hover:bg-zinc-100',
 }
@@ -23,7 +25,9 @@ const labels: Record<string, string> = {
   DISPONIVEL: 'Disponível',
   CONCLUIDA: 'Concluída',
   APROVADA: 'Aprovada',
+  APROVADO: 'Aprovado',
   REPROVADA: 'Reprovada',
+  REPROVADO: 'Reprovado',
   TRANCADA: 'Trancada',
   CANCELADA: 'Cancelada',
 }

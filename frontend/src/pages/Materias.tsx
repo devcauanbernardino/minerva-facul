@@ -1,6 +1,6 @@
 import { useEffect, useMemo, useState } from 'react'
 import { Link } from 'react-router-dom'
-import { BookOpen, Info, Plus, Trash2 } from 'lucide-react'
+import { BookOpen, Info, ListTree, Plus, Trash2 } from 'lucide-react'
 import { AlertaErro, AlertaSucesso, PageHeader } from '../components/PageHeader'
 import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
@@ -11,6 +11,15 @@ import {
   CardHeader,
   CardTitle,
 } from '@/components/ui/card'
+import { Checkbox } from '@/components/ui/checkbox'
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+} from '@/components/ui/dialog'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
 import {
@@ -34,7 +43,7 @@ import { PageContainer } from '../components/ui/PageContainer'
 import { StatCard } from '../components/ui/StatCard'
 import { api } from '../services/api'
 import type { Curso } from '../types/curso'
-import type { Materia } from '../types/materia'
+import type { Materia, MateriaRequest } from '../types/materia'
 import { mensagemErroApi } from '../utils/apiError'
 
 export function Materias() {
@@ -44,7 +53,11 @@ export function Materias() {
   const [sucesso, setSucesso] = useState<string | null>(null)
   const [nome, setNome] = useState('')
   const [cursoId, setCursoId] = useState('')
+  const [prerequisitoIds, setPrerequisitoIds] = useState<number[]>([])
   const [enviando, setEnviando] = useState(false)
+  const [editando, setEditando] = useState<Materia | null>(null)
+  const [prerequisitosEdicao, setPrerequisitosEdicao] = useState<number[]>([])
+  const [salvandoEdicao, setSalvandoEdicao] = useState(false)
 
   function carregar() {
     setErro(null)
@@ -77,6 +90,18 @@ export function Materias() {
     }
   }, [materias])
 
+  const candidatasPrerequisito = useMemo(() => {
+    if (!cursoId) return []
+    return (materias ?? []).filter((m) => m.cursoId === Number(cursoId))
+  }, [materias, cursoId])
+
+  function nomesPrerequisitos(ids: number[]) {
+    const lista = materias ?? []
+    return ids
+      .map((id) => lista.find((m) => m.id === id)?.nome)
+      .filter((nome): nome is string => Boolean(nome))
+  }
+
   function handleSubmit(e: React.FormEvent) {
     e.preventDefault()
     if (!cursoId) {
@@ -86,11 +111,13 @@ export function Materias() {
     setEnviando(true)
     setErro(null)
     setSucesso(null)
+    const payload: MateriaRequest = { nome, cursoId: Number(cursoId), prerequisitoIds }
     api
-      .post<Materia>('/materias', { nome, cursoId: Number(cursoId) })
+      .post<Materia>('/materias', payload)
       .then((res) => {
         setMaterias((prev) => (prev ? [...prev, res.data] : [res.data]))
         setNome('')
+        setPrerequisitoIds([])
         setSucesso('Matéria cadastrada com sucesso.')
       })
       .catch((err) => setErro(mensagemErroApi(err, 'Erro ao cadastrar matéria.')))
@@ -106,6 +133,36 @@ export function Materias() {
         setSucesso('Matéria excluída.')
       })
       .catch((err) => setErro(mensagemErroApi(err, 'Erro ao excluir matéria.')))
+  }
+
+  function togglePrerequisito(lista: number[], id: number, atualizar: (proximo: number[]) => void) {
+    atualizar(lista.includes(id) ? lista.filter((p) => p !== id) : [...lista, id])
+  }
+
+  function abrirEdicaoPrerequisitos(materia: Materia) {
+    setEditando(materia)
+    setPrerequisitosEdicao(materia.prerequisitoIds)
+  }
+
+  function handleSalvarPrerequisitos() {
+    if (!editando) return
+    setSalvandoEdicao(true)
+    setErro(null)
+    setSucesso(null)
+    const payload: MateriaRequest = {
+      nome: editando.nome,
+      cursoId: editando.cursoId,
+      prerequisitoIds: prerequisitosEdicao,
+    }
+    api
+      .put<Materia>(`/materias/${editando.id}`, payload)
+      .then((res) => {
+        setMaterias((prev) => prev?.map((m) => (m.id === res.data.id ? res.data : m)) ?? [])
+        setSucesso('Pré-requisitos atualizados.')
+        setEditando(null)
+      })
+      .catch((err) => setErro(mensagemErroApi(err, 'Erro ao atualizar pré-requisitos.')))
+      .finally(() => setSalvandoEdicao(false))
   }
 
   return (
@@ -150,7 +207,13 @@ export function Materias() {
               </div>
               <div className="space-y-1.5">
                 <Label>Curso</Label>
-                <Select value={cursoId} onValueChange={setCursoId}>
+                <Select
+                  value={cursoId}
+                  onValueChange={(value) => {
+                    setCursoId(value)
+                    setPrerequisitoIds([])
+                  }}
+                >
                   <SelectTrigger>
                     <SelectValue placeholder="Selecione um curso" />
                   </SelectTrigger>
@@ -163,6 +226,27 @@ export function Materias() {
                   </SelectContent>
                 </Select>
               </div>
+              {candidatasPrerequisito.length > 0 ? (
+                <div className="space-y-1.5">
+                  <Label>Pré-requisitos (opcional)</Label>
+                  <div className="max-h-40 space-y-2 overflow-y-auto rounded-lg border border-input p-3">
+                    {candidatasPrerequisito.map((m) => (
+                      <label
+                        key={m.id}
+                        className="flex items-center gap-2 text-sm font-normal text-foreground"
+                      >
+                        <Checkbox
+                          checked={prerequisitoIds.includes(m.id)}
+                          onCheckedChange={() =>
+                            togglePrerequisito(prerequisitoIds, m.id, setPrerequisitoIds)
+                          }
+                        />
+                        {m.nome}
+                      </label>
+                    ))}
+                  </div>
+                </div>
+              ) : null}
               <Button type="submit" size="lg" disabled={enviando} className="w-full">
                 {enviando ? 'Salvando…' : 'Cadastrar matéria'}
               </Button>
@@ -213,6 +297,7 @@ export function Materias() {
                   <TableRow className="bg-muted/50 hover:bg-muted/50">
                     <TableHead className="px-4">Matéria</TableHead>
                     <TableHead className="px-4">Curso</TableHead>
+                    <TableHead className="px-4">Pré-requisitos</TableHead>
                     <TableHead className="px-4 text-right">Ações</TableHead>
                   </TableRow>
                 </TableHeader>
@@ -228,16 +313,40 @@ export function Materias() {
                           {m.cursoNome}
                         </Badge>
                       </TableCell>
+                      <TableCell className="px-4 py-3">
+                        {m.prerequisitoIds.length === 0 ? (
+                          <span className="text-xs text-muted-foreground">Nenhum</span>
+                        ) : (
+                          <div className="flex flex-wrap gap-1">
+                            {nomesPrerequisitos(m.prerequisitoIds).map((nome) => (
+                              <Badge key={nome} variant="secondary" className="font-medium">
+                                {nome}
+                              </Badge>
+                            ))}
+                          </div>
+                        )}
+                      </TableCell>
                       <TableCell className="px-4 py-3 text-right">
-                        <Button
-                          type="button"
-                          variant="destructive"
-                          size="sm"
-                          onClick={() => handleExcluir(m.id)}
-                        >
-                          <Trash2 />
-                          Excluir
-                        </Button>
+                        <div className="flex justify-end gap-2">
+                          <Button
+                            type="button"
+                            variant="outline"
+                            size="sm"
+                            onClick={() => abrirEdicaoPrerequisitos(m)}
+                          >
+                            <ListTree />
+                            Pré-requisitos
+                          </Button>
+                          <Button
+                            type="button"
+                            variant="destructive"
+                            size="sm"
+                            onClick={() => handleExcluir(m.id)}
+                          >
+                            <Trash2 />
+                            Excluir
+                          </Button>
+                        </div>
                       </TableCell>
                     </TableRow>
                   ))}
@@ -247,6 +356,52 @@ export function Materias() {
           </Card>
         )}
       </section>
+
+      <Dialog open={editando != null} onOpenChange={(open) => !open && setEditando(null)}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>Pré-requisitos de {editando?.nome}</DialogTitle>
+            <DialogDescription>
+              Selecione as matérias do mesmo curso que o aluno precisa ter concluído antes de se
+              matricular nesta disciplina.
+            </DialogDescription>
+          </DialogHeader>
+          {editando ? (
+            <div className="max-h-72 space-y-2 overflow-y-auto rounded-lg border border-input p-3">
+              {(materias ?? [])
+                .filter((m) => m.cursoId === editando.cursoId && m.id !== editando.id)
+                .map((m) => (
+                  <label
+                    key={m.id}
+                    className="flex items-center gap-2 text-sm font-normal text-foreground"
+                  >
+                    <Checkbox
+                      checked={prerequisitosEdicao.includes(m.id)}
+                      onCheckedChange={() =>
+                        togglePrerequisito(prerequisitosEdicao, m.id, setPrerequisitosEdicao)
+                      }
+                    />
+                    {m.nome}
+                  </label>
+                ))}
+              {(materias ?? []).filter((m) => m.cursoId === editando.cursoId && m.id !== editando.id)
+                .length === 0 ? (
+                <p className="text-sm text-muted-foreground">
+                  Não há outras matérias cadastradas neste curso.
+                </p>
+              ) : null}
+            </div>
+          ) : null}
+          <DialogFooter>
+            <Button type="button" variant="outline" onClick={() => setEditando(null)}>
+              Cancelar
+            </Button>
+            <Button type="button" disabled={salvandoEdicao} onClick={handleSalvarPrerequisitos}>
+              {salvandoEdicao ? 'Salvando…' : 'Salvar'}
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </PageContainer>
   )
 }
