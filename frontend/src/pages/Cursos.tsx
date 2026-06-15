@@ -1,6 +1,6 @@
 import { useEffect, useMemo, useState } from 'react'
 import { Clock3, GraduationCap, Layers, Plus, Trash2 } from 'lucide-react'
-import { AlertaErro, AlertaSucesso, PageHeader } from '../components/PageHeader'
+import { AlertaErro, PageHeader } from '../components/PageHeader'
 import { Button } from '@/components/ui/button'
 import {
   Card,
@@ -11,14 +11,6 @@ import {
 } from '@/components/ui/card'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
-import {
-  Table,
-  TableBody,
-  TableCell,
-  TableHead,
-  TableHeader,
-  TableRow,
-} from '@/components/ui/table'
 import { Badge } from '@/components/ui/badge'
 import { EmptyState } from '../components/ui/EmptyState'
 import { LoadingState } from '../components/ui/LoadingState'
@@ -27,11 +19,12 @@ import { StatCard } from '../components/ui/StatCard'
 import { api } from '../services/api'
 import type { Curso } from '../types/curso'
 import { mensagemErroApi } from '../utils/apiError'
+import { useToast } from '../components/ui/Toast'
 
 export function Cursos() {
+  const { mostrarSucesso, mostrarErro } = useToast()
   const [cursos, setCursos] = useState<Curso[] | null>(null)
   const [erro, setErro] = useState<string | null>(null)
-  const [sucesso, setSucesso] = useState<string | null>(null)
   const [nome, setNome] = useState('')
   const [cargaHoraria, setCargaHoraria] = useState('')
   const [duracaoSemestres, setDuracaoSemestres] = useState('')
@@ -67,7 +60,6 @@ export function Cursos() {
     e.preventDefault()
     setEnviando(true)
     setErro(null)
-    setSucesso(null)
     api
       .post<Curso>('/cursos', {
         nome,
@@ -79,9 +71,9 @@ export function Cursos() {
         setNome('')
         setCargaHoraria('')
         setDuracaoSemestres('')
-        setSucesso('Curso cadastrado com sucesso.')
+        mostrarSucesso('Curso cadastrado com sucesso.')
       })
-      .catch((err) => setErro(mensagemErroApi(err, 'Erro ao cadastrar curso.')))
+      .catch((err) => mostrarErro(mensagemErroApi(err, 'Erro ao cadastrar curso.')))
       .finally(() => setEnviando(false))
   }
 
@@ -91,9 +83,9 @@ export function Cursos() {
       .delete(`/cursos/${id}`)
       .then(() => {
         setCursos((prev) => prev?.filter((c) => c.id !== id) ?? [])
-        setSucesso('Curso excluído.')
+        mostrarSucesso('Curso excluído.')
       })
-      .catch((err) => setErro(mensagemErroApi(err, 'Erro ao excluir curso.')))
+      .catch((err) => mostrarErro(mensagemErroApi(err, 'Erro ao excluir curso.')))
   }
 
   return (
@@ -104,7 +96,6 @@ export function Cursos() {
       />
 
       {erro ? <AlertaErro mensagem={erro} /> : null}
-      {sucesso ? <AlertaSucesso mensagem={sucesso} /> : null}
 
       <div className="mb-8 grid gap-4 sm:grid-cols-2">
         <StatCard
@@ -187,60 +178,48 @@ export function Cursos() {
       ) : null}
 
       {cursos && cursos.length > 0 ? (
-        <Card className="gap-0 overflow-hidden p-0">
-          <CardHeader className="border-b p-6 [.border-b]:pb-4">
-            <CardTitle>Cursos cadastrados</CardTitle>
-            <CardDescription>
-              {cursos.length} curso{cursos.length !== 1 ? 's' : ''} registrado
-              {cursos.length !== 1 ? 's' : ''}
-            </CardDescription>
-          </CardHeader>
-          <CardContent className="p-0">
-            <Table>
-              <TableHeader>
-                <TableRow className="bg-muted/50 hover:bg-muted/50">
-                  <TableHead className="px-4">Curso</TableHead>
-                  <TableHead className="px-4">Carga horária</TableHead>
-                  <TableHead className="px-4">Duração</TableHead>
-                  <TableHead className="px-4 text-right">Ações</TableHead>
-                </TableRow>
-              </TableHeader>
-              <TableBody>
-                {cursos.map((c) => (
-                  <TableRow key={c.id}>
-                    <TableCell className="px-4 py-3">
-                      <p className="font-medium">{c.nome}</p>
-                      <p className="text-xs text-muted-foreground">ID {c.id}</p>
-                    </TableCell>
-                    <TableCell className="px-4 py-3">
-                      <Badge variant="secondary" className="gap-1 font-medium">
-                        <Clock3 className="h-3 w-3" />
-                        {c.cargaHoraria}h
-                      </Badge>
-                    </TableCell>
-                    <TableCell className="px-4 py-3">
-                      <Badge variant="outline" className="gap-1 font-medium">
-                        <Layers className="h-3 w-3" />
-                        {c.duracaoSemestres} semestres
-                      </Badge>
-                    </TableCell>
-                    <TableCell className="px-4 py-3 text-right">
-                      <Button
-                        type="button"
-                        variant="destructive"
-                        size="sm"
-                        onClick={() => handleExcluir(c.id)}
-                      >
-                        <Trash2 />
-                        Excluir
-                      </Button>
-                    </TableCell>
-                  </TableRow>
-                ))}
-              </TableBody>
-            </Table>
-          </CardContent>
-        </Card>
+        <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
+          {cursos.map((c) => (
+            <Card key={c.id} className="gap-0 overflow-hidden p-0">
+              <CardContent className="flex-1 space-y-4 p-5">
+                <div className="flex items-start gap-3">
+                  <div className="flex h-11 w-11 shrink-0 items-center justify-center rounded-full bg-primary/10 text-primary">
+                    <GraduationCap className="h-5 w-5" />
+                  </div>
+                  <div className="min-w-0 flex-1">
+                    <p className="truncate font-display text-base font-semibold leading-tight">
+                      {c.nome}
+                    </p>
+                    <p className="text-xs text-muted-foreground">ID {c.id}</p>
+                  </div>
+                </div>
+
+                <div className="flex flex-wrap gap-1.5">
+                  <Badge variant="secondary" className="gap-1 font-medium">
+                    <Clock3 className="h-3 w-3" />
+                    {c.cargaHoraria}h
+                  </Badge>
+                  <Badge variant="outline" className="gap-1 font-medium">
+                    <Layers className="h-3 w-3" />
+                    {c.duracaoSemestres} semestres
+                  </Badge>
+                </div>
+              </CardContent>
+
+              <div className="border-t">
+                <Button
+                  type="button"
+                  variant="ghost"
+                  className="w-full rounded-none gap-1.5 text-xs font-medium text-destructive hover:text-destructive"
+                  onClick={() => handleExcluir(c.id)}
+                >
+                  <Trash2 className="h-3.5 w-3.5" />
+                  Excluir
+                </Button>
+              </div>
+            </Card>
+          ))}
+        </div>
       ) : null}
     </PageContainer>
   )

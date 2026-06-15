@@ -33,6 +33,7 @@ public class MateriaService {
         Materia m = new Materia();
         m.setNome(request.getNome());
         m.setCurso(curso);
+        m.setPrerequisitos(buscarPrerequisitos(request.getPrerequisitoIds(), null));
         return paraResponse(materiaRepository.save(m));
     }
     @Transactional
@@ -42,6 +43,7 @@ public class MateriaService {
                 .orElseThrow(() -> new RecursoNaoEncontradoException("Curso não encontrado com id: " + request.getCursoId()));
          m.setNome(request.getNome());
          m.setCurso(curso);
+         m.setPrerequisitos(buscarPrerequisitos(request.getPrerequisitoIds(), id));
          return paraResponse(materiaRepository.save(m));
     }
     @Transactional
@@ -50,9 +52,30 @@ public class MateriaService {
     }
      private Materia buscarEntidade(Long id){
       return materiaRepository.findById(id)
-         .orElseThrow(() -> new RecursoNaoEncontradoException("Matéria não encontada com id: " + id));
-    } 
+         .orElseThrow(() -> new RecursoNaoEncontradoException("Matéria não encontrada com id: " + id));
+    }
+
+    private List<Materia> buscarPrerequisitos(List<Long> prerequisitoIds, Long materiaId) {
+        if (prerequisitoIds == null || prerequisitoIds.isEmpty()) {
+            return new java.util.ArrayList<>();
+        }
+        if (materiaId != null && prerequisitoIds.contains(materiaId)) {
+            throw new IllegalArgumentException("Uma matéria não pode ser pré-requisito dela mesma.");
+        }
+        List<Materia> prerequisitos = materiaRepository.findAllById(prerequisitoIds);
+        if (prerequisitos.size() != prerequisitoIds.size()) {
+            throw new RecursoNaoEncontradoException("Uma ou mais matérias de pré-requisito não foram encontradas.");
+        }
+        return prerequisitos;
+    }
+
      private MateriaResponse paraResponse(Materia m){
-        return new MateriaResponse(m.getId(), m.getNome());
+        List<Long> prerequisitoIds = m.getPrerequisitos().stream().map(Materia::getId).toList();
+        return new MateriaResponse(
+            m.getId(),
+            m.getNome(),
+            m.getCurso().getId(),
+            m.getCurso().getNome(),
+            prerequisitoIds);
      }
 }

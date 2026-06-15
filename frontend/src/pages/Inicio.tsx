@@ -2,10 +2,12 @@ import { useEffect, useState } from 'react'
 import { Link } from 'react-router-dom'
 import {
   ArrowRight,
+  BarChart3,
   BookOpen,
   ClipboardList,
   GraduationCap,
   History,
+  LayoutGrid,
   PencilLine,
   Sparkles,
   UserRound,
@@ -229,9 +231,14 @@ export function Inicio() {
           <div className="minerva-divider">
             <span aria-hidden />
           </div>
-          <h2 className="mb-4 font-display text-lg font-semibold text-minerva-cinza-escuro">
-            Visão geral
-          </h2>
+          <div className="mb-4 flex items-center gap-2.5">
+            <span className="flex h-9 w-9 items-center justify-center rounded-xl bg-primary/10 text-primary">
+              <BarChart3 className="h-4 w-4" />
+            </span>
+            <h2 className="font-display text-lg font-semibold text-minerva-cinza-escuro">
+              Visão geral
+            </h2>
+          </div>
           <DashboardCharts usuario={usuario} />
         </div>
       ) : null}
@@ -241,9 +248,14 @@ export function Inicio() {
           <div className="minerva-divider">
             <span aria-hidden />
           </div>
-          <h2 className="mb-4 font-display text-lg font-semibold text-minerva-cinza-escuro">
-            Módulos disponíveis
-          </h2>
+          <div className="mb-4 flex items-center gap-2.5">
+            <span className="flex h-9 w-9 items-center justify-center rounded-xl bg-primary/10 text-primary">
+              <LayoutGrid className="h-4 w-4" />
+            </span>
+            <h2 className="font-display text-lg font-semibold text-minerva-cinza-escuro">
+              Módulos disponíveis
+            </h2>
+          </div>
           <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
             {modulos.map((m) => (
               <Link key={m.rota} to={m.rota} className="group no-underline hover:no-underline">

@@ -10,6 +10,7 @@ public class ProfessorResponse {
     private Long id;
     private String nome;
     private String email;
+    private String matricula;
     private String especialidade;
     private List<Long> materiaIds;
 }

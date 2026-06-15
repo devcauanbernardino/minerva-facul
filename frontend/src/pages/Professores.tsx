@@ -1,16 +1,10 @@
 import { useEffect, useMemo, useState } from 'react'
 import { Link } from 'react-router-dom'
 import { BookOpenCheck, Pencil, Trash2, UserRound } from 'lucide-react'
-import { AlertaErro, AlertaSucesso, PageHeader } from '../components/PageHeader'
+import { AlertaErro, PageHeader } from '../components/PageHeader'
 import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
-import {
-  Card,
-  CardContent,
-  CardDescription,
-  CardHeader,
-  CardTitle,
-} from '@/components/ui/card'
+import { Card, CardContent } from '@/components/ui/card'
 import { Checkbox } from '@/components/ui/checkbox'
 import {
   Dialog,
@@ -22,14 +16,6 @@ import {
 } from '@/components/ui/dialog'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
-import {
-  Table,
-  TableBody,
-  TableCell,
-  TableHead,
-  TableHeader,
-  TableRow,
-} from '@/components/ui/table'
 import { EmptyState } from '../components/ui/EmptyState'
 import { LoadingState } from '../components/ui/LoadingState'
 import { PageContainer } from '../components/ui/PageContainer'
@@ -38,12 +24,13 @@ import { api } from '../services/api'
 import type { Professor } from '../types/professor'
 import type { Materia } from '../types/materia'
 import { mensagemErroApi } from '../utils/apiError'
+import { useToast } from '../components/ui/Toast'
 
 export function Professores() {
+  const { mostrarSucesso, mostrarErro } = useToast()
   const [professores, setProfessores] = useState<Professor[] | null>(null)
   const [materias, setMaterias] = useState<Materia[]>([])
   const [erro, setErro] = useState<string | null>(null)
-  const [sucesso, setSucesso] = useState<string | null>(null)
   const [editandoId, setEditandoId] = useState<number | null>(null)
   const [vinculandoId, setVinculandoId] = useState<number | null>(null)
   const [materiaIdsSelecionadas, setMateriaIdsSelecionadas] = useState<number[]>([])
@@ -86,6 +73,14 @@ export function Professores() {
     }
   }, [professores])
 
+  const iniciais = (nome: string) =>
+    nome
+      .trim()
+      .split(/\s+/)
+      .slice(0, 2)
+      .map((parte) => parte[0]?.toUpperCase())
+      .join('')
+
   const professorEditando = useMemo(
     () => professores?.find((p) => p.id === editandoId) ?? null,
     [professores, editandoId],
@@ -102,7 +97,6 @@ export function Professores() {
     setEmail(professor.email)
     setSenha('')
     setEspecialidade(professor.especialidade ?? '')
-    setSucesso(null)
     setErro(null)
   }
 
@@ -118,7 +112,6 @@ export function Professores() {
     setVinculandoId(professor.id)
     setMateriaIdsSelecionadas(professor.materiaIds ?? [])
     setEditandoId(null)
-    setSucesso(null)
     setErro(null)
   }
 
@@ -138,7 +131,6 @@ export function Professores() {
     if (vinculandoId === null) return
     setVinculando(true)
     setErro(null)
-    setSucesso(null)
     api
       .put<Professor>(`/professores/${vinculandoId}/materias`, {
         materiaIds: materiaIdsSelecionadas,
@@ -146,9 +138,9 @@ export function Professores() {
       .then((res) => {
         setProfessores((prev) => prev?.map((p) => (p.id === vinculandoId ? res.data : p)) ?? [])
         cancelarVinculo()
-        setSucesso('Matérias vinculadas ao professor.')
+        mostrarSucesso('Matérias vinculadas ao professor.')
       })
-      .catch((err) => setErro(mensagemErroApi(err, 'Erro ao vincular matérias.')))
+      .catch((err) => mostrarErro(mensagemErroApi(err, 'Erro ao vincular matérias.')))
       .finally(() => setVinculando(false))
   }
 
@@ -157,7 +149,6 @@ export function Professores() {
     if (editandoId === null) return
     setEnviando(true)
     setErro(null)
-    setSucesso(null)
     if (!senha) {
       setErro('Informe a senha para salvar (backend exige o campo na edição).')
       setEnviando(false)
@@ -176,10 +167,10 @@ export function Professores() {
             prev?.map((p) => (p.id === editandoId ? res.data : p)) ?? [],
         )
         cancelarEdicao()
-        setSucesso('Professor atualizado.')
+        mostrarSucesso('Professor atualizado.')
       })
       .catch((err) =>
-        setErro(mensagemErroApi(err, 'Erro ao atualizar professor.')),
+        mostrarErro(mensagemErroApi(err, 'Erro ao atualizar professor.')),
       )
       .finally(() => setEnviando(false))
   }
@@ -191,10 +182,10 @@ export function Professores() {
       .then(() => {
         setProfessores((prev) => prev?.filter((p) => p.id !== id) ?? [])
         if (editandoId === id) cancelarEdicao()
-        setSucesso('Professor excluído.')
+        mostrarSucesso('Professor excluído.')
       })
       .catch((err) =>
-        setErro(mensagemErroApi(err, 'Erro ao excluir professor.')),
+        mostrarErro(mensagemErroApi(err, 'Erro ao excluir professor.')),
       )
   }
 
@@ -206,7 +197,6 @@ export function Professores() {
       />
 
       {erro ? <AlertaErro mensagem={erro} /> : null}
-      {sucesso ? <AlertaSucesso mensagem={sucesso} /> : null}
 
       <div className="mb-8 grid gap-4 sm:grid-cols-3">
         <StatCard titulo="Professores" valor={stats.total} descricao="Cadastrados no sistema" destaque />
@@ -224,84 +214,71 @@ export function Professores() {
             icone={<UserRound className="h-7 w-7" />}
           />
         ) : (
-          <Card className="gap-0 overflow-hidden p-0">
-            <CardHeader className="border-b p-6 [.border-b]:pb-4">
-              <CardTitle>Professores cadastrados</CardTitle>
-              <CardDescription>
-                {professores.length} professor{professores.length !== 1 ? 'es' : ''} no sistema
-              </CardDescription>
-            </CardHeader>
-            <CardContent className="p-0">
-              <Table>
-                <TableHeader>
-                  <TableRow className="bg-muted/50 hover:bg-muted/50">
-                    <TableHead className="px-4">Professor</TableHead>
-                    <TableHead className="px-4">E-mail</TableHead>
-                    <TableHead className="px-4">Especialidade</TableHead>
-                    <TableHead className="px-4">Matérias</TableHead>
-                    <TableHead className="px-4 text-right">Ações</TableHead>
-                  </TableRow>
-                </TableHeader>
-                <TableBody>
-                  {professores.map((p) => (
-                    <TableRow key={p.id}>
-                      <TableCell className="px-4 py-3">
-                        <p className="font-medium">{p.nome}</p>
-                        <p className="text-xs text-muted-foreground">ID {p.id}</p>
-                      </TableCell>
-                      <TableCell className="px-4 py-3 text-muted-foreground">{p.email}</TableCell>
-                      <TableCell className="px-4 py-3">
-                        {p.especialidade ? (
-                          <Badge variant="outline" className="font-medium">
-                            {p.especialidade}
-                          </Badge>
-                        ) : (
-                          <span className="text-muted-foreground/50">—</span>
-                        )}
-                      </TableCell>
-                      <TableCell className="px-4 py-3">
-                        <Badge variant="secondary" className="font-medium">
-                          {p.materiaIds?.length ?? 0} matéria
-                          {(p.materiaIds?.length ?? 0) !== 1 ? 's' : ''}
-                        </Badge>
-                      </TableCell>
-                      <TableCell className="px-4 py-3">
-                        <div className="flex justify-end gap-1.5">
-                          <Button
-                            type="button"
-                            variant="outline"
-                            size="sm"
-                            onClick={() => iniciarVinculo(p)}
-                          >
-                            <BookOpenCheck />
-                            Matérias
-                          </Button>
-                          <Button
-                            type="button"
-                            variant="outline"
-                            size="sm"
-                            onClick={() => iniciarEdicao(p)}
-                          >
-                            <Pencil />
-                            Editar
-                          </Button>
-                          <Button
-                            type="button"
-                            variant="destructive"
-                            size="sm"
-                            onClick={() => handleExcluir(p.id)}
-                          >
-                            <Trash2 />
-                            Excluir
-                          </Button>
-                        </div>
-                      </TableCell>
-                    </TableRow>
-                  ))}
-                </TableBody>
-              </Table>
-            </CardContent>
-          </Card>
+          <div className="grid gap-4 sm:grid-cols-2">
+            {professores.map((p) => (
+              <Card
+                key={p.id}
+                className="gap-0 overflow-hidden p-0 transition-shadow hover:shadow-md"
+              >
+                <CardContent className="flex-1 space-y-4 p-5">
+                  <div className="flex items-start gap-3">
+                    <div className="flex h-11 w-11 shrink-0 items-center justify-center rounded-full bg-primary/10 font-display text-sm font-bold text-primary">
+                      {iniciais(p.nome)}
+                    </div>
+                    <div className="min-w-0 flex-1">
+                      <p className="truncate font-display text-base font-semibold leading-tight">
+                        {p.nome}
+                      </p>
+                      <p className="text-xs text-muted-foreground">{p.matricula ?? `ID ${p.id}`}</p>
+                      <p className="truncate text-xs text-muted-foreground">{p.email}</p>
+                    </div>
+                  </div>
+
+                  <div className="flex flex-wrap gap-1.5">
+                    {p.especialidade ? (
+                      <Badge variant="outline" className="font-medium">
+                        {p.especialidade}
+                      </Badge>
+                    ) : null}
+                    <Badge variant="secondary" className="font-medium">
+                      {p.materiaIds?.length ?? 0} matéria
+                      {(p.materiaIds?.length ?? 0) !== 1 ? 's' : ''}
+                    </Badge>
+                  </div>
+                </CardContent>
+
+                <div className="flex border-t divide-x divide-border">
+                  <Button
+                    type="button"
+                    variant="ghost"
+                    className="flex-1 rounded-none gap-1.5 text-xs font-medium"
+                    onClick={() => iniciarVinculo(p)}
+                  >
+                    <BookOpenCheck className="h-3.5 w-3.5" />
+                    Matérias
+                  </Button>
+                  <Button
+                    type="button"
+                    variant="ghost"
+                    className="flex-1 rounded-none gap-1.5 text-xs font-medium"
+                    onClick={() => iniciarEdicao(p)}
+                  >
+                    <Pencil className="h-3.5 w-3.5" />
+                    Editar
+                  </Button>
+                  <Button
+                    type="button"
+                    variant="ghost"
+                    className="flex-1 rounded-none gap-1.5 text-xs font-medium text-destructive hover:text-destructive"
+                    onClick={() => handleExcluir(p.id)}
+                  >
+                    <Trash2 className="h-3.5 w-3.5" />
+                    Excluir
+                  </Button>
+                </div>
+              </Card>
+            ))}
+          </div>
         )}
       </section>
 

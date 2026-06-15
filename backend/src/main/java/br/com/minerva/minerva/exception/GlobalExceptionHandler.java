@@ -47,6 +47,28 @@ public class GlobalExceptionHandler {
 		return ResponseEntity.status(HttpStatus.NOT_FOUND).body(body);
 	}
 
+	@ExceptionHandler(IllegalStateException.class)
+	public ResponseEntity<ErroResponse> estadoInvalido(IllegalStateException ex) {
+		ErroResponse body = ErroResponse.builder()
+			.timestamp(Instant.now())
+			.status(HttpStatus.CONFLICT.value())
+			.erro("Conflito")
+			.mensagem(ex.getMessage())
+			.build();
+		return ResponseEntity.status(HttpStatus.CONFLICT).body(body);
+	}
+
+	@ExceptionHandler(IllegalArgumentException.class)
+	public ResponseEntity<ErroResponse> argumentoInvalido(IllegalArgumentException ex) {
+		ErroResponse body = ErroResponse.builder()
+			.timestamp(Instant.now())
+			.status(HttpStatus.BAD_REQUEST.value())
+			.erro("Dados inválidos")
+			.mensagem(ex.getMessage())
+			.build();
+		return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(body);
+	}
+
 	@ExceptionHandler(MethodArgumentNotValidException.class)
 	public ResponseEntity<ErroResponse> validacao(MethodArgumentNotValidException ex) {
 		var errosPorCampo = ex.getBindingResult()

@@ -1,7 +1,7 @@
 import { useEffect, useMemo, useState } from 'react'
 import { Link } from 'react-router-dom'
-import { BookOpen, Info, Plus, Trash2 } from 'lucide-react'
-import { AlertaErro, AlertaSucesso, PageHeader } from '../components/PageHeader'
+import { BookOpen, Info, ListTree, Plus, Trash2 } from 'lucide-react'
+import { AlertaErro, PageHeader } from '../components/PageHeader'
 import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
 import {
@@ -11,6 +11,15 @@ import {
   CardHeader,
   CardTitle,
 } from '@/components/ui/card'
+import { Checkbox } from '@/components/ui/checkbox'
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+} from '@/components/ui/dialog'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
 import {
@@ -20,31 +29,28 @@ import {
   SelectTrigger,
   SelectValue,
 } from '@/components/ui/select'
-import {
-  Table,
-  TableBody,
-  TableCell,
-  TableHead,
-  TableHeader,
-  TableRow,
-} from '@/components/ui/table'
 import { EmptyState } from '../components/ui/EmptyState'
 import { LoadingState } from '../components/ui/LoadingState'
 import { PageContainer } from '../components/ui/PageContainer'
 import { StatCard } from '../components/ui/StatCard'
 import { api } from '../services/api'
 import type { Curso } from '../types/curso'
-import type { Materia } from '../types/materia'
+import type { Materia, MateriaRequest } from '../types/materia'
 import { mensagemErroApi } from '../utils/apiError'
+import { useToast } from '../components/ui/Toast'
 
 export function Materias() {
+  const { mostrarSucesso, mostrarErro } = useToast()
   const [materias, setMaterias] = useState<Materia[] | null>(null)
   const [cursos, setCursos] = useState<Curso[]>([])
   const [erro, setErro] = useState<string | null>(null)
-  const [sucesso, setSucesso] = useState<string | null>(null)
   const [nome, setNome] = useState('')
   const [cursoId, setCursoId] = useState('')
+  const [prerequisitoIds, setPrerequisitoIds] = useState<number[]>([])
   const [enviando, setEnviando] = useState(false)
+  const [editando, setEditando] = useState<Materia | null>(null)
+  const [prerequisitosEdicao, setPrerequisitosEdicao] = useState<number[]>([])
+  const [salvandoEdicao, setSalvandoEdicao] = useState(false)
 
   function carregar() {
     setErro(null)
@@ -77,6 +83,18 @@ export function Materias() {
     }
   }, [materias])
 
+  const candidatasPrerequisito = useMemo(() => {
+    if (!cursoId) return []
+    return (materias ?? []).filter((m) => m.cursoId === Number(cursoId))
+  }, [materias, cursoId])
+
+  function nomesPrerequisitos(ids: number[]) {
+    const lista = materias ?? []
+    return ids
+      .map((id) => lista.find((m) => m.id === id)?.nome)
+      .filter((nome): nome is string => Boolean(nome))
+  }
+
   function handleSubmit(e: React.FormEvent) {
     e.preventDefault()
     if (!cursoId) {
@@ -85,15 +103,16 @@ export function Materias() {
     }
     setEnviando(true)
     setErro(null)
-    setSucesso(null)
+    const payload: MateriaRequest = { nome, cursoId: Number(cursoId), prerequisitoIds }
     api
-      .post<Materia>('/materias', { nome, cursoId: Number(cursoId) })
+      .post<Materia>('/materias', payload)
       .then((res) => {
         setMaterias((prev) => (prev ? [...prev, res.data] : [res.data]))
         setNome('')
-        setSucesso('Matéria cadastrada com sucesso.')
+        setPrerequisitoIds([])
+        mostrarSucesso('Matéria cadastrada com sucesso.')
       })
-      .catch((err) => setErro(mensagemErroApi(err, 'Erro ao cadastrar matéria.')))
+      .catch((err) => mostrarErro(mensagemErroApi(err, 'Erro ao cadastrar matéria.')))
       .finally(() => setEnviando(false))
   }
 
@@ -103,9 +122,38 @@ export function Materias() {
       .delete(`/materias/${id}`)
       .then(() => {
         setMaterias((prev) => prev?.filter((m) => m.id !== id) ?? [])
-        setSucesso('Matéria excluída.')
+        mostrarSucesso('Matéria excluída.')
       })
-      .catch((err) => setErro(mensagemErroApi(err, 'Erro ao excluir matéria.')))
+      .catch((err) => mostrarErro(mensagemErroApi(err, 'Erro ao excluir matéria.')))
+  }
+
+  function togglePrerequisito(lista: number[], id: number, atualizar: (proximo: number[]) => void) {
+    atualizar(lista.includes(id) ? lista.filter((p) => p !== id) : [...lista, id])
+  }
+
+  function abrirEdicaoPrerequisitos(materia: Materia) {
+    setEditando(materia)
+    setPrerequisitosEdicao(materia.prerequisitoIds)
+  }
+
+  function handleSalvarPrerequisitos() {
+    if (!editando) return
+    setSalvandoEdicao(true)
+    setErro(null)
+    const payload: MateriaRequest = {
+      nome: editando.nome,
+      cursoId: editando.cursoId,
+      prerequisitoIds: prerequisitosEdicao,
+    }
+    api
+      .put<Materia>(`/materias/${editando.id}`, payload)
+      .then((res) => {
+        setMaterias((prev) => prev?.map((m) => (m.id === res.data.id ? res.data : m)) ?? [])
+        mostrarSucesso('Pré-requisitos atualizados.')
+        setEditando(null)
+      })
+      .catch((err) => mostrarErro(mensagemErroApi(err, 'Erro ao atualizar pré-requisitos.')))
+      .finally(() => setSalvandoEdicao(false))
   }
 
   return (
@@ -116,7 +164,6 @@ export function Materias() {
       />
 
       {erro ? <AlertaErro mensagem={erro} /> : null}
-      {sucesso ? <AlertaSucesso mensagem={sucesso} /> : null}
 
       <div className="mb-8 grid gap-4 sm:grid-cols-2">
         <StatCard titulo="Matérias" valor={stats.total} descricao="Disciplinas cadastradas" destaque />
@@ -150,7 +197,13 @@ export function Materias() {
               </div>
               <div className="space-y-1.5">
                 <Label>Curso</Label>
-                <Select value={cursoId} onValueChange={setCursoId}>
+                <Select
+                  value={cursoId}
+                  onValueChange={(value) => {
+                    setCursoId(value)
+                    setPrerequisitoIds([])
+                  }}
+                >
                   <SelectTrigger>
                     <SelectValue placeholder="Selecione um curso" />
                   </SelectTrigger>
@@ -163,6 +216,27 @@ export function Materias() {
                   </SelectContent>
                 </Select>
               </div>
+              {candidatasPrerequisito.length > 0 ? (
+                <div className="space-y-1.5">
+                  <Label>Pré-requisitos (opcional)</Label>
+                  <div className="max-h-40 space-y-2 overflow-y-auto rounded-lg border border-input p-3">
+                    {candidatasPrerequisito.map((m) => (
+                      <label
+                        key={m.id}
+                        className="flex items-center gap-2 text-sm font-normal text-foreground"
+                      >
+                        <Checkbox
+                          checked={prerequisitoIds.includes(m.id)}
+                          onCheckedChange={() =>
+                            togglePrerequisito(prerequisitoIds, m.id, setPrerequisitoIds)
+                          }
+                        />
+                        {m.nome}
+                      </label>
+                    ))}
+                  </div>
+                </div>
+              ) : null}
               <Button type="submit" size="lg" disabled={enviando} className="w-full">
                 {enviando ? 'Salvando…' : 'Cadastrar matéria'}
               </Button>
@@ -200,53 +274,111 @@ export function Materias() {
             icone={<BookOpen className="h-7 w-7" />}
           />
         ) : (
-          <Card className="gap-0 overflow-hidden p-0">
-            <CardHeader className="border-b p-6 [.border-b]:pb-4">
-              <CardTitle>Matérias cadastradas</CardTitle>
-              <CardDescription>
-                {materias.length} disciplina{materias.length !== 1 ? 's' : ''} no sistema
-              </CardDescription>
-            </CardHeader>
-            <CardContent className="p-0">
-              <Table>
-                <TableHeader>
-                  <TableRow className="bg-muted/50 hover:bg-muted/50">
-                    <TableHead className="px-4">Matéria</TableHead>
-                    <TableHead className="px-4">Curso</TableHead>
-                    <TableHead className="px-4 text-right">Ações</TableHead>
-                  </TableRow>
-                </TableHeader>
-                <TableBody>
-                  {materias.map((m) => (
-                    <TableRow key={m.id}>
-                      <TableCell className="px-4 py-3">
-                        <p className="font-medium">{m.nome}</p>
-                        <p className="text-xs text-muted-foreground">ID {m.id}</p>
-                      </TableCell>
-                      <TableCell className="px-4 py-3">
-                        <Badge variant="outline" className="font-medium">
-                          {m.cursoNome}
+          <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
+            {materias.map((m) => (
+              <Card key={m.id} className="gap-0 overflow-hidden p-0">
+                <CardContent className="flex-1 space-y-3 p-5">
+                  <div className="flex items-start gap-3">
+                    <div className="flex h-11 w-11 shrink-0 items-center justify-center rounded-full bg-primary/10 text-primary">
+                      <BookOpen className="h-5 w-5" />
+                    </div>
+                    <div className="min-w-0 flex-1">
+                      <p className="truncate font-display text-base font-semibold leading-tight">
+                        {m.nome}
+                      </p>
+                      <p className="text-xs text-muted-foreground">ID {m.id}</p>
+                    </div>
+                  </div>
+
+                  <div className="flex flex-wrap gap-1.5">
+                    <Badge variant="outline" className="font-medium">
+                      {m.cursoNome}
+                    </Badge>
+                    {m.prerequisitoIds.length === 0 ? (
+                      <Badge variant="secondary" className="font-medium text-muted-foreground">
+                        Sem pré-requisitos
+                      </Badge>
+                    ) : (
+                      nomesPrerequisitos(m.prerequisitoIds).map((nome) => (
+                        <Badge key={nome} variant="secondary" className="font-medium">
+                          {nome}
                         </Badge>
-                      </TableCell>
-                      <TableCell className="px-4 py-3 text-right">
-                        <Button
-                          type="button"
-                          variant="destructive"
-                          size="sm"
-                          onClick={() => handleExcluir(m.id)}
-                        >
-                          <Trash2 />
-                          Excluir
-                        </Button>
-                      </TableCell>
-                    </TableRow>
-                  ))}
-                </TableBody>
-              </Table>
-            </CardContent>
-          </Card>
+                      ))
+                    )}
+                  </div>
+                </CardContent>
+
+                <div className="flex border-t divide-x divide-border">
+                  <Button
+                    type="button"
+                    variant="ghost"
+                    className="flex-1 rounded-none gap-1.5 text-xs font-medium"
+                    onClick={() => abrirEdicaoPrerequisitos(m)}
+                  >
+                    <ListTree className="h-3.5 w-3.5" />
+                    Pré-requisitos
+                  </Button>
+                  <Button
+                    type="button"
+                    variant="ghost"
+                    className="flex-1 rounded-none gap-1.5 text-xs font-medium text-destructive hover:text-destructive"
+                    onClick={() => handleExcluir(m.id)}
+                  >
+                    <Trash2 className="h-3.5 w-3.5" />
+                    Excluir
+                  </Button>
+                </div>
+              </Card>
+            ))}
+          </div>
         )}
       </section>
+
+      <Dialog open={editando != null} onOpenChange={(open) => !open && setEditando(null)}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>Pré-requisitos de {editando?.nome}</DialogTitle>
+            <DialogDescription>
+              Selecione as matérias do mesmo curso que o aluno precisa ter concluído antes de se
+              matricular nesta disciplina.
+            </DialogDescription>
+          </DialogHeader>
+          {editando ? (
+            <div className="max-h-72 space-y-2 overflow-y-auto rounded-lg border border-input p-3">
+              {(materias ?? [])
+                .filter((m) => m.cursoId === editando.cursoId && m.id !== editando.id)
+                .map((m) => (
+                  <label
+                    key={m.id}
+                    className="flex items-center gap-2 text-sm font-normal text-foreground"
+                  >
+                    <Checkbox
+                      checked={prerequisitosEdicao.includes(m.id)}
+                      onCheckedChange={() =>
+                        togglePrerequisito(prerequisitosEdicao, m.id, setPrerequisitosEdicao)
+                      }
+                    />
+                    {m.nome}
+                  </label>
+                ))}
+              {(materias ?? []).filter((m) => m.cursoId === editando.cursoId && m.id !== editando.id)
+                .length === 0 ? (
+                <p className="text-sm text-muted-foreground">
+                  Não há outras matérias cadastradas neste curso.
+                </p>
+              ) : null}
+            </div>
+          ) : null}
+          <DialogFooter>
+            <Button type="button" variant="outline" onClick={() => setEditando(null)}>
+              Cancelar
+            </Button>
+            <Button type="button" disabled={salvandoEdicao} onClick={handleSalvarPrerequisitos}>
+              {salvandoEdicao ? 'Salvando…' : 'Salvar'}
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </PageContainer>
   )
 }

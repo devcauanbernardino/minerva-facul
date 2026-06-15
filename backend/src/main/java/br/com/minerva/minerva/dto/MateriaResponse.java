@@ -1,5 +1,6 @@
 package br.com.minerva.minerva.dto;
 
+import java.util.List;
 import lombok.*;
 
 @Data
@@ -10,4 +11,5 @@ public class MateriaResponse {
     private String nome;
     private Long cursoId;
     private String cursoNome;
+    private List<Long> prerequisitoIds;
 }

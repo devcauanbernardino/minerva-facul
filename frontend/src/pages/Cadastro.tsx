@@ -5,8 +5,16 @@ import { api } from "../services/api";
 import { gerarMatricula } from "../utils/matricula";
 import type { Curso } from "../types/curso";
 import type { Materia } from "../types/materia";
-import { EyeIcon, EyeSlashIcon } from "@heroicons/react/24/outline";
 import { MinervaLogo } from "../components/MinervaLogo";
+import { Checkbox } from "@/components/ui/checkbox";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
+import { EyeIcon, EyeSlashIcon } from "@heroicons/react/24/outline";
 
 export function Cadastro() {
   const [nome, setNome] = useState("");
@@ -138,7 +146,7 @@ export function Cadastro() {
   }
 
   return (
-    <div className="min-h-screen grid md:grid-cols-[45%_55%] bg-minerva-cinza-claro">
+    <div className="grid md:grid-cols-[45%_55%] bg-minerva-cinza-claro">
       <aside
         className="relative hidden md:flex flex-col justify-end overflow-hidden bg-primary p-12 text-minerva-marmore"
         style={{
@@ -162,7 +170,7 @@ export function Cadastro() {
         </div>
       </aside>
 
-      <section className="flex flex-col items-center justify-center p-6">
+      <section className="flex min-h-dvh flex-col items-center justify-center p-6">
         <div className="mb-6 md:hidden">
           <MinervaLogo variant="md" linkToHome showWordmark />
         </div>
@@ -193,12 +201,11 @@ export function Cadastro() {
 
           <form onSubmit={handleSubmit} className="space-y-4">
             <div className="space-y-3">
-              <label className="flex items-center gap-3">
-                <input
-                  type="checkbox"
+              <label className="flex items-center gap-2 text-sm font-medium text-minerva-cinza-escuro">
+                <Checkbox
                   checked={isProfessor}
-                  onChange={(e) => {
-                    setIsProfessor(e.target.checked);
+                  onCheckedChange={(checked) => {
+                    setIsProfessor(checked === true);
                     setEspecialidadeDoc(null);
                     setMateriaIds([]);
                   }}
@@ -269,6 +276,11 @@ export function Cadastro() {
                   aria-label={showSenha ? "Ocultar senha" : "Mostrar senha"}
                   className="absolute right-0 top-0 bottom-0 flex items-center justify-center w-10 text-primary hover:bg-minerva-cinza-claro rounded-r-lg"
                 >
+                  {showSenha ? (
+                    <EyeSlashIcon className="h-5 w-5" />
+                  ) : (
+                    <EyeIcon className="h-5 w-5" />
+                  )}
                 </button>
               </div>
             </div>
@@ -301,6 +313,11 @@ export function Cadastro() {
                   }
                   className="absolute right-0 top-0 bottom-0 flex items-center justify-center w-10 text-primary hover:bg-minerva-cinza-claro rounded-r-lg"
                 >
+                  {showConfirmarSenha ? (
+                    <EyeSlashIcon className="h-5 w-5" />
+                  ) : (
+                    <EyeIcon className="h-5 w-5" />
+                  )}
                 </button>
               </div>
             </div>
@@ -317,25 +334,28 @@ export function Cadastro() {
                   >
                     Curso
                   </label>
-                  <select
-                    id="cadastro-curso"
-                    required
+                  <Select
                     value={curso}
-                    onChange={(e) => setCurso(e.target.value)}
+                    onValueChange={setCurso}
                     disabled={carregandoCursos || cursos.length === 0}
-                    className="w-full rounded-lg border border-minerva-cinza-escuro/15 bg-minerva-marmore px-4 py-2.5 text-minerva-cinza-escuro outline-none transition focus:border-primary focus:ring-2 focus:ring-primary/20 disabled:cursor-not-allowed disabled:opacity-60"
                   >
-                    <option value="">
-                      {carregandoCursos
-                        ? "Carregando cursos..."
-                        : "Selecione um curso"}
-                    </option>
-                    {cursos.map((c) => (
-                      <option key={c.id} value={c.nome}>
-                        {c.nome}
-                      </option>
-                    ))}
-                  </select>
+                    <SelectTrigger id="cadastro-curso" className="w-full">
+                      <SelectValue
+                        placeholder={
+                          carregandoCursos
+                            ? "Carregando cursos..."
+                            : "Selecione um curso"
+                        }
+                      />
+                    </SelectTrigger>
+                    <SelectContent>
+                      {cursos.map((c) => (
+                        <SelectItem key={c.id} value={c.nome}>
+                          {c.nome}
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
                   {erroCursos ? (
                     <p className="text-xs text-red-700">{erroCursos}</p>
                   ) : null}
@@ -348,12 +368,10 @@ export function Cadastro() {
                     </p>
                   ) : null}
                 </div>
-                <label className="flex items-center gap-3 text-sm text-minerva-cinza-escuro">
-                  <input
-                    type="checkbox"
+                <label className="flex items-center gap-2 text-sm text-minerva-cinza-escuro">
+                  <Checkbox
                     checked={bolsista}
-                    onChange={(e) => setBolsista(e.target.checked)}
-                    className="h-4 w-4 rounded border-minerva-cinza-escuro/30 text-primary accent-primary"
+                    onCheckedChange={(checked) => setBolsista(checked === true)}
                   />
                   Bolsista
                 </label>
@@ -380,17 +398,15 @@ export function Cadastro() {
                       Nenhuma matéria cadastrada. Peça à secretaria cadastrar disciplinas antes.
                     </p>
                   ) : (
-                    <div className="max-h-44 space-y-2 overflow-y-auto rounded-lg border border-minerva-cinza-escuro/10 p-2">
+                    <div className="relative max-h-44 space-y-2 overflow-y-auto rounded-lg border border-minerva-cinza-escuro/10 p-2">
                       {materias.map((m) => (
                         <label
                           key={m.id}
                           className="flex cursor-pointer items-center gap-2 rounded-md px-2 py-1.5 text-sm hover:bg-minerva-cinza-claro"
                         >
-                          <input
-                            type="checkbox"
+                          <Checkbox
                             checked={materiaIds.includes(m.id)}
-                            onChange={() => toggleMateria(m.id)}
-                            className="accent-primary"
+                            onCheckedChange={() => toggleMateria(m.id)}
                           />
                           <span>
                             {m.nome}

@@ -7,7 +7,9 @@ import org.springframework.transaction.annotation.Transactional;
 import br.com.minerva.minerva.dto.CadastroRequest;
 import br.com.minerva.minerva.dto.LoginRequest;
 import br.com.minerva.minerva.dto.LoginResponse;
+import br.com.minerva.minerva.dto.ProfessorMateriaRequest;
 import br.com.minerva.minerva.dto.UsuarioResponse;
+import br.com.minerva.minerva.model.Professor;
 import br.com.minerva.minerva.exception.CredenciaisInvalidasException;
 import br.com.minerva.minerva.exception.EmailJaCadastradoException;
 import br.com.minerva.minerva.model.Usuario;
@@ -51,7 +53,10 @@ public class UsuarioService {
 			alunoService.garantirAlunoDeUsuario(salvo);
 		}
 		if ("PROFESSOR".equals(salvo.getTipo())) {
-			professorService.garantirProfessorDeUsuario(salvo);
+			Professor professor = professorService.garantirProfessorDeUsuario(salvo);
+			if (request.getMateriaIds() != null && !request.getMateriaIds().isEmpty()) {
+				professorService.vincularMaterias(professor.getId(), new ProfessorMateriaRequest(request.getMateriaIds()));
+			}
 		}
 		return paraResponse(salvo);
 	}

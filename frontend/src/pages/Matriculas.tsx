@@ -1,7 +1,8 @@
 import { useCallback, useEffect, useMemo, useState } from 'react'
 import { Link } from 'react-router-dom'
 import { CheckCircle2, ClipboardList, ListChecks, Plus, Search, Trash2 } from 'lucide-react'
-import { AlertaErro, AlertaSucesso, PageHeader } from '../components/PageHeader'
+import { AlertaErro, PageHeader } from '../components/PageHeader'
+import { useToast } from '../components/ui/Toast'
 import { Button } from '@/components/ui/button'
 import {
   Card,
@@ -19,14 +20,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from '@/components/ui/select'
-import {
-  Table,
-  TableBody,
-  TableCell,
-  TableHead,
-  TableHeader,
-  TableRow,
-} from '@/components/ui/table'
+import { Badge } from '@/components/ui/badge'
 import { BadgeSituacao } from '../components/ui/BadgeSituacao'
 import { EmptyState } from '../components/ui/EmptyState'
 import { LoadingState } from '../components/ui/LoadingState'
@@ -37,16 +31,6 @@ import type { Aluno } from '../types/aluno'
 import type { Materia } from '../types/materia'
 import type { Matricula, MatriculaRequest, SituacaoMatricula } from '../types/matricula'
 import { mensagemErroApi } from '../utils/apiError'
-import { SituacaoPieChart } from '../components/charts/SituacaoPieChart'
-import { ContagemBarChart } from '../components/charts/ContagemBarChart'
-import { DistribuicaoNotasChart } from '../components/charts/DistribuicaoNotasChart'
-import { MediaBarChart } from '../components/charts/MediaBarChart'
-import {
-  agruparContagem,
-  agruparNotasPorFaixa,
-  contagemPorCampo,
-  mediaNotasPorCampo,
-} from '../utils/charts'
 
 const opcoesSituacao: { valor: SituacaoMatricula; label: string }[] = [
   { valor: 'ATIVA', label: 'Ativa' },
@@ -61,13 +45,13 @@ export function Matriculas() {
   const [alunos, setAlunos] = useState<Aluno[]>([])
   const [materias, setMaterias] = useState<Materia[]>([])
   const [erro, setErro] = useState<string | null>(null)
-  const [sucesso, setSucesso] = useState<string | null>(null)
   const [carregando, setCarregando] = useState(true)
   const [enviando, setEnviando] = useState(false)
   const [filtro, setFiltro] = useState('')
   const [alunoId, setAlunoId] = useState('')
   const [materiaId, setMateriaId] = useState('')
   const [situacao, setSituacao] = useState<SituacaoMatricula>('ATIVA')
+  const { mostrarSucesso, mostrarErro } = useToast()
 
   const carregarMatriculas = useCallback(() => {
     return api
@@ -125,16 +109,6 @@ export function Matriculas() {
     }
   }, [matriculas])
 
-  const chartData = useMemo(() => {
-    const lista = matriculas ?? []
-    const situacoes = agruparContagem(lista.map((m) => m.situacao))
-    const cursos = contagemPorCampo(lista, (m) => m.cursoNome)
-    const materias = contagemPorCampo(lista, (m) => m.materiaNome)
-    const faixasNota = agruparNotasPorFaixa(lista.map((m) => m.nota))
-    const mediaPorCurso = mediaNotasPorCampo(lista, (m) => m.cursoNome, (m) => m.nota)
-    return { situacoes, cursos, materias, faixasNota, mediaPorCurso }
-  }, [matriculas])
-
   const alunoSelecionado = useMemo(
     () => alunos.find((a) => String(a.id) === alunoId),
     [alunos, alunoId],
@@ -165,7 +139,6 @@ export function Matriculas() {
 
     setEnviando(true)
     setErro(null)
-    setSucesso(null)
 
     const payload: MatriculaRequest = {
       alunoId: Number(alunoId),
@@ -176,10 +149,10 @@ export function Matriculas() {
     api
       .post<Matricula>('/matriculas', payload)
       .then(() => {
-        setSucesso('Matrícula registrada com sucesso.')
+        mostrarSucesso('Matrícula registrada com sucesso.')
         return carregarMatriculas()
       })
-      .catch((e) => setErro(mensagemErroApi(e, 'Erro ao matricular aluno.')))
+      .catch((e) => mostrarErro(mensagemErroApi(e, 'Erro ao matricular aluno.')))
       .finally(() => setEnviando(false))
   }
 
@@ -187,10 +160,10 @@ export function Matriculas() {
     api
       .put<Matricula>(`/matriculas/${id}/situacao`, null, { params: { situacao: novaSituacao } })
       .then(() => {
-        setSucesso(`Situação atualizada para ${novaSituacao}.`)
+        mostrarSucesso(`Situação atualizada para ${novaSituacao}.`)
         return carregarMatriculas()
       })
-      .catch((e) => setErro(mensagemErroApi(e, 'Erro ao atualizar situação.')))
+      .catch((e) => mostrarErro(mensagemErroApi(e, 'Erro ao atualizar situação.')))
   }
 
   function handleExcluir(id: number, alunoNome: string) {
@@ -198,10 +171,10 @@ export function Matriculas() {
     api
       .delete(`/matriculas/${id}`)
       .then(() => {
-        setSucesso('Matrícula excluída.')
+        mostrarSucesso('Matrícula excluída.')
         return carregarMatriculas()
       })
-      .catch((e) => setErro(mensagemErroApi(e, 'Erro ao excluir matrícula.')))
+      .catch((e) => mostrarErro(mensagemErroApi(e, 'Erro ao excluir matrícula.')))
   }
 
   if (carregando) {
@@ -221,47 +194,6 @@ export function Matriculas() {
       />
 
       {erro ? <AlertaErro mensagem={erro} /> : null}
-      {sucesso ? <AlertaSucesso mensagem={sucesso} /> : null}
-
-      <div className="mb-8 grid gap-4 sm:grid-cols-3">
-        <StatCard titulo="Total" valor={stats.total} descricao="Matrículas registradas" />
-        <StatCard titulo="Ativas" valor={stats.ativas} descricao="Em andamento" destaque />
-        <StatCard titulo="Concluídas" valor={stats.concluidas} descricao="Finalizadas" />
-      </div>
-
-      {(matriculas?.length ?? 0) > 0 ? (
-        <div className="mb-10 grid gap-8 sm:grid-cols-2 xl:grid-cols-3">
-          <SituacaoPieChart
-            titulo="Matrículas por situação"
-            descricao="Ativas, concluídas, canceladas e outras."
-            dados={chartData.situacoes}
-          />
-          <ContagemBarChart
-            titulo="Matrículas por curso"
-            descricao="Distribuição entre os cursos."
-            dados={chartData.cursos}
-          />
-          <ContagemBarChart
-            titulo="Matrículas por matéria"
-            descricao="Disciplinas com mais matrículas."
-            dados={chartData.materias}
-            cor="#0284c7"
-          />
-          <DistribuicaoNotasChart
-            titulo="Distribuição de notas"
-            descricao="Faixas de desempenho geral."
-            dados={chartData.faixasNota}
-            vazio="Nenhuma nota lançada ainda."
-          />
-          <MediaBarChart
-            titulo="Média por curso"
-            descricao="Nota média por curso (0–10)."
-            dados={chartData.mediaPorCurso}
-            cor="#059669"
-            vazio="Lance notas para calcular médias."
-          />
-        </div>
-      ) : null}
 
       <section className="mb-10 grid gap-6 lg:grid-cols-[1.6fr_1fr]">
         <Card>
@@ -397,6 +329,12 @@ export function Matriculas() {
         </Card>
       </section>
 
+      <div className="grid gap-4 sm:grid-cols-3">
+        <StatCard titulo="Total" valor={stats.total} descricao="Matrículas registradas" />
+        <StatCard titulo="Ativas" valor={stats.ativas} descricao="Em andamento" destaque />
+        <StatCard titulo="Concluídas" valor={stats.concluidas} descricao="Finalizadas" />
+      </div>
+
       <section>
         <div className="mb-4 flex flex-wrap items-end justify-between gap-4">
           <div>
@@ -424,72 +362,60 @@ export function Matriculas() {
             icone={<ClipboardList className="h-7 w-7" />}
           />
         ) : (
-          <Card className="gap-0 overflow-hidden p-0">
-            <CardContent className="p-0">
-              <Table>
-                <TableHeader>
-                  <TableRow className="bg-muted/50 hover:bg-muted/50">
-                    <TableHead className="px-4">Aluno</TableHead>
-                    <TableHead className="px-4">Matéria</TableHead>
-                    <TableHead className="px-4">Curso</TableHead>
-                    <TableHead className="px-4">Data</TableHead>
-                    <TableHead className="px-4">Situação</TableHead>
-                    <TableHead className="px-4">Nota</TableHead>
-                    <TableHead className="px-4 text-right">Ações</TableHead>
-                  </TableRow>
-                </TableHeader>
-                <TableBody>
-                  {matriculasFiltradas.map((m) => (
-                    <TableRow key={m.id}>
-                      <TableCell className="px-4 py-3">
-                        <p className="font-medium">{m.alunoNome}</p>
-                        <p className="text-xs text-muted-foreground">ID {m.alunoId}</p>
-                      </TableCell>
-                      <TableCell className="px-4 py-3">{m.materiaNome}</TableCell>
-                      <TableCell className="px-4 py-3 text-muted-foreground">
-                        {m.cursoNome}
-                      </TableCell>
-                      <TableCell className="px-4 py-3">{m.dataCriacao}</TableCell>
-                      <TableCell className="px-4 py-3">
-                        <BadgeSituacao situacao={m.situacao} />
-                      </TableCell>
-                      <TableCell className="px-4 py-3">
-                        {m.nota != null ? (
-                          <span className="font-semibold">{m.nota.toFixed(1)}</span>
-                        ) : (
-                          <span className="text-muted-foreground/50">—</span>
-                        )}
-                      </TableCell>
-                      <TableCell className="px-4 py-3">
-                        <div className="flex justify-end gap-1.5">
-                          {m.situacao === 'ATIVA' ? (
-                            <Button
-                              type="button"
-                              variant="outline"
-                              size="sm"
-                              onClick={() => handleAlterarSituacao(m.id, 'CONCLUIDA')}
-                            >
-                              <CheckCircle2 />
-                              Concluir
-                            </Button>
-                          ) : null}
-                          <Button
-                            type="button"
-                            variant="destructive"
-                            size="sm"
-                            onClick={() => handleExcluir(m.id, m.alunoNome)}
-                          >
-                            <Trash2 />
-                            Excluir
-                          </Button>
-                        </div>
-                      </TableCell>
-                    </TableRow>
-                  ))}
-                </TableBody>
-              </Table>
-            </CardContent>
-          </Card>
+          <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
+            {matriculasFiltradas.map((m) => (
+              <Card key={m.id} className="gap-0 overflow-hidden p-0">
+                <CardContent className="flex-1 space-y-3 p-5">
+                  <div className="flex items-start justify-between gap-3">
+                    <div className="min-w-0 flex-1">
+                      <p className="truncate font-display text-base font-semibold leading-tight">
+                        {m.alunoNome}
+                      </p>
+                      <p className="text-xs text-muted-foreground">ID {m.alunoId}</p>
+                    </div>
+                    <BadgeSituacao situacao={m.situacao} />
+                  </div>
+
+                  <div className="flex flex-wrap gap-1.5">
+                    <Badge variant="outline" className="font-medium">{m.materiaNome}</Badge>
+                    <Badge variant="secondary" className="font-medium">{m.cursoNome}</Badge>
+                  </div>
+
+                  <div className="flex items-center justify-between text-xs text-muted-foreground">
+                    <span>{m.dataCriacao}</span>
+                    {m.nota != null ? (
+                      <span className="font-semibold text-foreground">Nota: {m.nota.toFixed(1)}</span>
+                    ) : (
+                      <span className="text-muted-foreground/50">Sem nota</span>
+                    )}
+                  </div>
+                </CardContent>
+
+                <div className="flex border-t divide-x divide-border">
+                  {m.situacao === 'ATIVA' ? (
+                    <Button
+                      type="button"
+                      variant="ghost"
+                      className="flex-1 rounded-none gap-1.5 text-xs font-medium"
+                      onClick={() => handleAlterarSituacao(m.id, 'CONCLUIDA')}
+                    >
+                      <CheckCircle2 className="h-3.5 w-3.5" />
+                      Concluir
+                    </Button>
+                  ) : null}
+                  <Button
+                    type="button"
+                    variant="ghost"
+                    className="flex-1 rounded-none gap-1.5 text-xs font-medium text-destructive hover:text-destructive"
+                    onClick={() => handleExcluir(m.id, m.alunoNome)}
+                  >
+                    <Trash2 className="h-3.5 w-3.5" />
+                    Excluir
+                  </Button>
+                </div>
+              </Card>
+            ))}
+          </div>
         )}
       </section>
     </PageContainer>

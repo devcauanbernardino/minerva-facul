@@ -1,8 +1,8 @@
 package br.com.minerva.minerva.controller;
 
-import java.net.URI;
 import java.util.List;
 
+import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
@@ -45,15 +45,10 @@ public class ProfessorController {
 		return professorService.listarMatriculasDasTurmas(email);
 	}
 
-	@GetMapping("/{id}")
-	public ProfessorResponse buscarPorId(@PathVariable Long id) {
-		return professorService.buscarPorId(id);
-	}
-
 	@PostMapping
 	@ResponseStatus(HttpStatus.CREATED)
 	public ProfessorResponse criar(@Valid @RequestBody ProfessorRequest request) {
-		return professorService.criar(request);
+		return professorService.criar(request != null ? request : new ProfessorRequest());
 	}
 
 	@PutMapping("/{id}")
