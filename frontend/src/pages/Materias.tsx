@@ -1,7 +1,7 @@
 import { useEffect, useMemo, useState } from 'react'
 import { Link } from 'react-router-dom'
 import { BookOpen, Info, ListTree, Plus, Trash2 } from 'lucide-react'
-import { AlertaErro, AlertaSucesso, PageHeader } from '../components/PageHeader'
+import { AlertaErro, PageHeader } from '../components/PageHeader'
 import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
 import {
@@ -29,14 +29,6 @@ import {
   SelectTrigger,
   SelectValue,
 } from '@/components/ui/select'
-import {
-  Table,
-  TableBody,
-  TableCell,
-  TableHead,
-  TableHeader,
-  TableRow,
-} from '@/components/ui/table'
 import { EmptyState } from '../components/ui/EmptyState'
 import { LoadingState } from '../components/ui/LoadingState'
 import { PageContainer } from '../components/ui/PageContainer'
@@ -45,12 +37,13 @@ import { api } from '../services/api'
 import type { Curso } from '../types/curso'
 import type { Materia, MateriaRequest } from '../types/materia'
 import { mensagemErroApi } from '../utils/apiError'
+import { useToast } from '../components/ui/Toast'
 
 export function Materias() {
+  const { mostrarSucesso, mostrarErro } = useToast()
   const [materias, setMaterias] = useState<Materia[] | null>(null)
   const [cursos, setCursos] = useState<Curso[]>([])
   const [erro, setErro] = useState<string | null>(null)
-  const [sucesso, setSucesso] = useState<string | null>(null)
   const [nome, setNome] = useState('')
   const [cursoId, setCursoId] = useState('')
   const [prerequisitoIds, setPrerequisitoIds] = useState<number[]>([])
@@ -110,7 +103,6 @@ export function Materias() {
     }
     setEnviando(true)
     setErro(null)
-    setSucesso(null)
     const payload: MateriaRequest = { nome, cursoId: Number(cursoId), prerequisitoIds }
     api
       .post<Materia>('/materias', payload)
@@ -118,9 +110,9 @@ export function Materias() {
         setMaterias((prev) => (prev ? [...prev, res.data] : [res.data]))
         setNome('')
         setPrerequisitoIds([])
-        setSucesso('Matéria cadastrada com sucesso.')
+        mostrarSucesso('Matéria cadastrada com sucesso.')
       })
-      .catch((err) => setErro(mensagemErroApi(err, 'Erro ao cadastrar matéria.')))
+      .catch((err) => mostrarErro(mensagemErroApi(err, 'Erro ao cadastrar matéria.')))
       .finally(() => setEnviando(false))
   }
 
@@ -130,9 +122,9 @@ export function Materias() {
       .delete(`/materias/${id}`)
       .then(() => {
         setMaterias((prev) => prev?.filter((m) => m.id !== id) ?? [])
-        setSucesso('Matéria excluída.')
+        mostrarSucesso('Matéria excluída.')
       })
-      .catch((err) => setErro(mensagemErroApi(err, 'Erro ao excluir matéria.')))
+      .catch((err) => mostrarErro(mensagemErroApi(err, 'Erro ao excluir matéria.')))
   }
 
   function togglePrerequisito(lista: number[], id: number, atualizar: (proximo: number[]) => void) {
@@ -148,7 +140,6 @@ export function Materias() {
     if (!editando) return
     setSalvandoEdicao(true)
     setErro(null)
-    setSucesso(null)
     const payload: MateriaRequest = {
       nome: editando.nome,
       cursoId: editando.cursoId,
@@ -158,10 +149,10 @@ export function Materias() {
       .put<Materia>(`/materias/${editando.id}`, payload)
       .then((res) => {
         setMaterias((prev) => prev?.map((m) => (m.id === res.data.id ? res.data : m)) ?? [])
-        setSucesso('Pré-requisitos atualizados.')
+        mostrarSucesso('Pré-requisitos atualizados.')
         setEditando(null)
       })
-      .catch((err) => setErro(mensagemErroApi(err, 'Erro ao atualizar pré-requisitos.')))
+      .catch((err) => mostrarErro(mensagemErroApi(err, 'Erro ao atualizar pré-requisitos.')))
       .finally(() => setSalvandoEdicao(false))
   }
 
@@ -173,7 +164,6 @@ export function Materias() {
       />
 
       {erro ? <AlertaErro mensagem={erro} /> : null}
-      {sucesso ? <AlertaSucesso mensagem={sucesso} /> : null}
 
       <div className="mb-8 grid gap-4 sm:grid-cols-2">
         <StatCard titulo="Matérias" valor={stats.total} descricao="Disciplinas cadastradas" destaque />
@@ -284,76 +274,63 @@ export function Materias() {
             icone={<BookOpen className="h-7 w-7" />}
           />
         ) : (
-          <Card className="gap-0 overflow-hidden p-0">
-            <CardHeader className="border-b p-6 [.border-b]:pb-4">
-              <CardTitle>Matérias cadastradas</CardTitle>
-              <CardDescription>
-                {materias.length} disciplina{materias.length !== 1 ? 's' : ''} no sistema
-              </CardDescription>
-            </CardHeader>
-            <CardContent className="p-0">
-              <Table>
-                <TableHeader>
-                  <TableRow className="bg-muted/50 hover:bg-muted/50">
-                    <TableHead className="px-4">Matéria</TableHead>
-                    <TableHead className="px-4">Curso</TableHead>
-                    <TableHead className="px-4">Pré-requisitos</TableHead>
-                    <TableHead className="px-4 text-right">Ações</TableHead>
-                  </TableRow>
-                </TableHeader>
-                <TableBody>
-                  {materias.map((m) => (
-                    <TableRow key={m.id}>
-                      <TableCell className="px-4 py-3">
-                        <p className="font-medium">{m.nome}</p>
-                        <p className="text-xs text-muted-foreground">ID {m.id}</p>
-                      </TableCell>
-                      <TableCell className="px-4 py-3">
-                        <Badge variant="outline" className="font-medium">
-                          {m.cursoNome}
+          <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
+            {materias.map((m) => (
+              <Card key={m.id} className="gap-0 overflow-hidden p-0">
+                <CardContent className="flex-1 space-y-3 p-5">
+                  <div className="flex items-start gap-3">
+                    <div className="flex h-11 w-11 shrink-0 items-center justify-center rounded-full bg-primary/10 text-primary">
+                      <BookOpen className="h-5 w-5" />
+                    </div>
+                    <div className="min-w-0 flex-1">
+                      <p className="truncate font-display text-base font-semibold leading-tight">
+                        {m.nome}
+                      </p>
+                      <p className="text-xs text-muted-foreground">ID {m.id}</p>
+                    </div>
+                  </div>
+
+                  <div className="flex flex-wrap gap-1.5">
+                    <Badge variant="outline" className="font-medium">
+                      {m.cursoNome}
+                    </Badge>
+                    {m.prerequisitoIds.length === 0 ? (
+                      <Badge variant="secondary" className="font-medium text-muted-foreground">
+                        Sem pré-requisitos
+                      </Badge>
+                    ) : (
+                      nomesPrerequisitos(m.prerequisitoIds).map((nome) => (
+                        <Badge key={nome} variant="secondary" className="font-medium">
+                          {nome}
                         </Badge>
-                      </TableCell>
-                      <TableCell className="px-4 py-3">
-                        {m.prerequisitoIds.length === 0 ? (
-                          <span className="text-xs text-muted-foreground">Nenhum</span>
-                        ) : (
-                          <div className="flex flex-wrap gap-1">
-                            {nomesPrerequisitos(m.prerequisitoIds).map((nome) => (
-                              <Badge key={nome} variant="secondary" className="font-medium">
-                                {nome}
-                              </Badge>
-                            ))}
-                          </div>
-                        )}
-                      </TableCell>
-                      <TableCell className="px-4 py-3 text-right">
-                        <div className="flex justify-end gap-2">
-                          <Button
-                            type="button"
-                            variant="outline"
-                            size="sm"
-                            onClick={() => abrirEdicaoPrerequisitos(m)}
-                          >
-                            <ListTree />
-                            Pré-requisitos
-                          </Button>
-                          <Button
-                            type="button"
-                            variant="destructive"
-                            size="sm"
-                            onClick={() => handleExcluir(m.id)}
-                          >
-                            <Trash2 />
-                            Excluir
-                          </Button>
-                        </div>
-                      </TableCell>
-                    </TableRow>
-                  ))}
-                </TableBody>
-              </Table>
-            </CardContent>
-          </Card>
+                      ))
+                    )}
+                  </div>
+                </CardContent>
+
+                <div className="flex border-t divide-x divide-border">
+                  <Button
+                    type="button"
+                    variant="ghost"
+                    className="flex-1 rounded-none gap-1.5 text-xs font-medium"
+                    onClick={() => abrirEdicaoPrerequisitos(m)}
+                  >
+                    <ListTree className="h-3.5 w-3.5" />
+                    Pré-requisitos
+                  </Button>
+                  <Button
+                    type="button"
+                    variant="ghost"
+                    className="flex-1 rounded-none gap-1.5 text-xs font-medium text-destructive hover:text-destructive"
+                    onClick={() => handleExcluir(m.id)}
+                  >
+                    <Trash2 className="h-3.5 w-3.5" />
+                    Excluir
+                  </Button>
+                </div>
+              </Card>
+            ))}
+          </div>
         )}
       </section>
 

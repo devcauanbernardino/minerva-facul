@@ -1,6 +1,6 @@
 import { useCallback, useEffect, useMemo, useState } from 'react'
 import { Info, PencilLine, Search } from 'lucide-react'
-import { AlertaErro, AlertaSucesso, PageHeader } from '../components/PageHeader'
+import { AlertaErro, PageHeader } from '../components/PageHeader'
 import { Button } from '@/components/ui/button'
 import { Card, CardContent } from '@/components/ui/card'
 import {
@@ -13,14 +13,7 @@ import {
 } from '@/components/ui/dialog'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
-import {
-  Table,
-  TableBody,
-  TableCell,
-  TableHead,
-  TableHeader,
-  TableRow,
-} from '@/components/ui/table'
+import { Badge } from '@/components/ui/badge'
 import { BadgeSituacao } from '../components/ui/BadgeSituacao'
 import { EmptyState } from '../components/ui/EmptyState'
 import { LoadingState } from '../components/ui/LoadingState'
@@ -43,6 +36,7 @@ import {
   encurtarNome,
   mediaNotasPorCampo,
 } from '../utils/charts'
+import { useToast } from '../components/ui/Toast'
 
 type EdicaoNotas = {
   matriculaId: number
@@ -55,8 +49,8 @@ type EdicaoNotas = {
 export function ProfessorNotas() {
   const usuario = getUsuario()
   const [turmas, setTurmas] = useState<Matricula[] | null>(null)
+  const { mostrarSucesso, mostrarErro } = useToast()
   const [erro, setErro] = useState<string | null>(null)
-  const [sucesso, setSucesso] = useState<string | null>(null)
   const [carregando, setCarregando] = useState(true)
   const [salvandoId, setSalvandoId] = useState<number | null>(null)
   const [edicao, setEdicao] = useState<EdicaoNotas | null>(null)
@@ -130,7 +124,6 @@ export function ProfessorNotas() {
       nota: m.nota != null ? String(m.nota) : '',
       frequencia: m.frequencia != null ? String(m.frequencia) : '',
     })
-    setSucesso(null)
     setErro(null)
   }
 
@@ -156,18 +149,17 @@ export function ProfessorNotas() {
 
     setSalvandoId(edicao.matriculaId)
     setErro(null)
-    setSucesso(null)
 
     const payload: NotasRequest = { nota, frequencia }
 
     api
       .patch<Matricula>(`/matriculas/${edicao.matriculaId}/notas`, payload)
       .then(() => {
-        setSucesso('Notas lançadas com sucesso. Disciplina foi encerrada automaticamente conforme o resultado.')
+        mostrarSucesso('Notas lançadas com sucesso. Disciplina foi encerrada automaticamente conforme o resultado.')
         setEdicao(null)
         return carregarTurmas()
       })
-      .catch((e) => setErro(mensagemErroApi(e, 'Erro ao lançar notas.')))
+      .catch((e) => mostrarErro(mensagemErroApi(e, 'Erro ao lançar notas.')))
       .finally(() => setSalvandoId(null))
   }
 
@@ -188,7 +180,6 @@ export function ProfessorNotas() {
       />
 
       {erro ? <AlertaErro mensagem={erro} /> : null}
-      {sucesso ? <AlertaSucesso mensagem={sucesso} /> : null}
 
       <div className="mb-8 grid gap-4 sm:grid-cols-3">
         <StatCard titulo="Alunos" valor={stats.alunos} descricao="Nas suas turmas" destaque />
@@ -274,67 +265,63 @@ export function ProfessorNotas() {
           icone={<PencilLine className="h-7 w-7" />}
         />
       ) : (
-        <Card className="gap-0 overflow-hidden p-0">
-          <CardContent className="p-0">
-            <Table>
-              <TableHeader>
-                <TableRow className="bg-muted/50 hover:bg-muted/50">
-                  <TableHead className="px-4">Aluno</TableHead>
-                  <TableHead className="px-4">Matéria</TableHead>
-                  <TableHead className="px-4">Curso</TableHead>
-                  <TableHead className="px-4">Situação</TableHead>
-                  <TableHead className="px-4">Nota</TableHead>
-                  <TableHead className="px-4">Frequência</TableHead>
-                  <TableHead className="px-4 text-right">Ações</TableHead>
-                </TableRow>
-              </TableHeader>
-              <TableBody>
-                {turmasFiltradas.map((t) => (
-                  <TableRow key={t.id}>
-                    <TableCell className="px-4 py-3">
-                      <p className="font-medium">{t.alunoNome}</p>
-                      <p className="text-xs text-muted-foreground">Matrícula #{t.id}</p>
-                    </TableCell>
-                    <TableCell className="px-4 py-3">{t.materiaNome}</TableCell>
-                    <TableCell className="px-4 py-3 text-muted-foreground">{t.cursoNome}</TableCell>
-                    <TableCell className="px-4 py-3">
-                      <BadgeSituacao situacao={t.situacao} />
-                    </TableCell>
-                    <TableCell className="px-4 py-3">
-                      {t.nota != null ? (
-                        <span className="font-semibold">{t.nota.toFixed(1)}</span>
-                      ) : (
-                        <span className="text-muted-foreground/50">—</span>
-                      )}
-                    </TableCell>
-                    <TableCell className="px-4 py-3">
-                      {t.frequencia != null ? (
-                        <span>{t.frequencia.toFixed(0)}%</span>
-                      ) : (
-                        <span className="text-muted-foreground/50">—</span>
-                      )}
-                    </TableCell>
-                    <TableCell className="px-4 py-3 text-right">
-                      {t.situacao === 'ATIVA' ? (
-                        <Button
-                          type="button"
-                          variant="outline"
-                          size="sm"
-                          onClick={() => iniciarEdicao(t)}
-                        >
-                          <PencilLine />
-                          Lançar notas
-                        </Button>
-                      ) : (
-                        <span className="text-xs text-muted-foreground/60">Encerrada</span>
-                      )}
-                    </TableCell>
-                  </TableRow>
-                ))}
-              </TableBody>
-            </Table>
-          </CardContent>
-        </Card>
+        <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
+          {turmasFiltradas.map((t) => (
+            <Card key={t.id} className="gap-0 overflow-hidden p-0">
+              <CardContent className="flex-1 space-y-3 p-5">
+                <div className="flex items-start justify-between gap-3">
+                  <div className="min-w-0 flex-1">
+                    <p className="truncate font-display text-base font-semibold leading-tight">
+                      {t.alunoNome}
+                    </p>
+                    <p className="text-xs text-muted-foreground">Matrícula #{t.id}</p>
+                  </div>
+                  <BadgeSituacao situacao={t.situacao} />
+                </div>
+
+                <div className="flex flex-wrap gap-1.5">
+                  <Badge variant="outline" className="font-medium">{t.materiaNome}</Badge>
+                  <Badge variant="secondary" className="font-medium">{t.cursoNome}</Badge>
+                </div>
+
+                <div className="flex items-center justify-between text-xs text-muted-foreground">
+                  <span>
+                    Nota:{' '}
+                    {t.nota != null ? (
+                      <span className="font-semibold text-foreground">{t.nota.toFixed(1)}</span>
+                    ) : (
+                      <span className="text-muted-foreground/50">—</span>
+                    )}
+                  </span>
+                  <span>
+                    Frequência:{' '}
+                    {t.frequencia != null ? (
+                      <span className="font-semibold text-foreground">{t.frequencia.toFixed(0)}%</span>
+                    ) : (
+                      <span className="text-muted-foreground/50">—</span>
+                    )}
+                  </span>
+                </div>
+              </CardContent>
+
+              <div className="border-t">
+                {t.situacao === 'ATIVA' ? (
+                  <Button
+                    type="button"
+                    variant="ghost"
+                    className="w-full rounded-none gap-1.5 text-xs font-medium"
+                    onClick={() => iniciarEdicao(t)}
+                  >
+                    <PencilLine className="h-3.5 w-3.5" />
+                    Lançar notas
+                  </Button>
+                ) : (
+                  <p className="px-5 py-3 text-center text-xs text-muted-foreground/60">Encerrada</p>
+                )}
+              </div>
+            </Card>
+          ))}
+        </div>
       )}
 
       <Dialog open={edicao !== null} onOpenChange={(open) => !open && cancelarEdicao()}>

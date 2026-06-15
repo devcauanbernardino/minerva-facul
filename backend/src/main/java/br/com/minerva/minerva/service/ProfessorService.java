@@ -19,6 +19,7 @@ public class ProfessorService {
     private final ProfessorRepository professorRepository;
     private final MateriaRepository materiaRepository;
     private final MatriculaRepository matriculaRepository;
+    private final UsuarioRepository usuarioRepository;
     private final PasswordEncoder passwordEncoder;
 
     @Transactional(readOnly = true)
@@ -121,6 +122,9 @@ public class ProfessorService {
 
     private ProfessorResponse paraResponse(Professor p) {
         List<Long> materiaIds = p.getMaterias().stream().map(Materia::getId).toList();
-        return new ProfessorResponse(p.getId(), p.getNome(), p.getEmail(), p.getEspecialidade(), materiaIds);
+        String matricula = usuarioRepository.findByEmail(p.getEmail())
+            .map(Usuario::getMatricula)
+            .orElse(null);
+        return new ProfessorResponse(p.getId(), p.getNome(), p.getEmail(), matricula, p.getEspecialidade(), materiaIds);
     }
 }

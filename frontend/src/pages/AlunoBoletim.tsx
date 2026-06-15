@@ -3,14 +3,6 @@ import { Award, GraduationCap } from 'lucide-react'
 import { AlertaErro, PageHeader } from '../components/PageHeader'
 import { Badge } from '@/components/ui/badge'
 import { Card, CardContent } from '@/components/ui/card'
-import {
-  Table,
-  TableBody,
-  TableCell,
-  TableHead,
-  TableHeader,
-  TableRow,
-} from '@/components/ui/table'
 import { BadgeSituacao } from '../components/ui/BadgeSituacao'
 import { EmptyState } from '../components/ui/EmptyState'
 import { LoadingState } from '../components/ui/LoadingState'
@@ -200,48 +192,47 @@ export function AlunoBoletim() {
               icone={<GraduationCap className="h-7 w-7" />}
             />
           ) : (
-            <Card className="gap-0 overflow-hidden p-0">
-              <CardContent className="p-0">
-                <Table>
-                  <TableHeader>
-                    <TableRow className="bg-muted/50 hover:bg-muted/50">
-                      <TableHead className="px-4">Disciplina</TableHead>
-                      <TableHead className="px-4">Situação</TableHead>
-                      <TableHead className="px-4">Nota</TableHead>
-                      <TableHead className="px-4">Frequência</TableHead>
-                    </TableRow>
-                  </TableHeader>
-                  <TableBody>
-                    {boletim.disciplinas.map((d) => (
-                      <TableRow key={d.materiaId}>
-                        <TableCell className="px-4 py-3">
-                          <p className="font-medium">{d.materiaNome}</p>
-                          <p className="text-xs text-muted-foreground">ID {d.materiaId}</p>
-                        </TableCell>
-                        <TableCell className="px-4 py-3">
-                          <BadgeSituacao situacao={d.situacao === 'ATIVA' ? 'CURSANDO' : d.situacao} />
-                          <span className="sr-only">{labelSituacaoBoletim(d.situacao)}</span>
-                        </TableCell>
-                        <TableCell className="px-4 py-3">
-                          <span
-                            className={
-                              d.nota != null && d.nota >= 7
-                                ? 'font-semibold text-emerald-700'
-                                : d.nota != null && d.nota < 5
-                                  ? 'font-semibold text-red-700'
-                                  : 'font-semibold'
-                            }
-                          >
-                            {formatarNota(d.nota)}
-                          </span>
-                        </TableCell>
-                        <TableCell className="px-4 py-3">{formatarFrequencia(d.frequencia)}</TableCell>
-                      </TableRow>
-                    ))}
-                  </TableBody>
-                </Table>
-              </CardContent>
-            </Card>
+            <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
+              {boletim.disciplinas.map((d) => (
+                <Card key={d.materiaId} className="gap-0 overflow-hidden p-0">
+                  <CardContent className="space-y-3 p-5">
+                    <div className="flex items-start justify-between gap-3">
+                      <div className="min-w-0 flex-1">
+                        <p className="truncate font-display text-base font-semibold leading-tight">
+                          {d.materiaNome}
+                        </p>
+                        <p className="text-xs text-muted-foreground">ID {d.materiaId}</p>
+                      </div>
+                      <div>
+                        <BadgeSituacao situacao={d.situacao === 'ATIVA' ? 'CURSANDO' : d.situacao} />
+                        <span className="sr-only">{labelSituacaoBoletim(d.situacao)}</span>
+                      </div>
+                    </div>
+
+                    <div className="flex items-center justify-between text-xs text-muted-foreground">
+                      <span>
+                        Nota:{' '}
+                        <span
+                          className={
+                            d.nota != null && d.nota >= 7
+                              ? 'font-semibold text-emerald-700'
+                              : d.nota != null && d.nota < 5
+                                ? 'font-semibold text-red-700'
+                                : 'font-semibold text-foreground'
+                          }
+                        >
+                          {formatarNota(d.nota)}
+                        </span>
+                      </span>
+                      <span>
+                        Frequência:{' '}
+                        <span className="font-semibold text-foreground">{formatarFrequencia(d.frequencia)}</span>
+                      </span>
+                    </div>
+                  </CardContent>
+                </Card>
+              ))}
+            </div>
           )}
         </div>
       ) : null}
