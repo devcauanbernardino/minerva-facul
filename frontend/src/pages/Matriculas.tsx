@@ -1,6 +1,7 @@
 import { useCallback, useEffect, useMemo, useState } from 'react'
 import { Link } from 'react-router-dom'
-import { CheckCircle2, ClipboardList, ListChecks, Plus, Search, Trash2 } from 'lucide-react'
+import { ClipboardList, ListChecks, Search } from 'lucide-react'
+import { CheckIcon, PlusIcon, TrashIcon } from '../components/ui/AnimatedIcons'
 import { AlertaErro, PageHeader } from '../components/PageHeader'
 import { useToast } from '../components/ui/Toast'
 import { Button } from '@/components/ui/button'
@@ -20,7 +21,6 @@ import {
   SelectTrigger,
   SelectValue,
 } from '@/components/ui/select'
-import { Badge } from '@/components/ui/badge'
 import { BadgeSituacao } from '../components/ui/BadgeSituacao'
 import { EmptyState } from '../components/ui/EmptyState'
 import { LoadingState } from '../components/ui/LoadingState'
@@ -29,6 +29,7 @@ import { StatCard } from '../components/ui/StatCard'
 import { api } from '../services/api'
 import type { Aluno } from '../types/aluno'
 import type { Materia } from '../types/materia'
+import type { Professor } from '../types/professor'
 import type { Matricula, MatriculaRequest, SituacaoMatricula } from '../types/matricula'
 import { mensagemErroApi } from '../utils/apiError'
 
@@ -44,6 +45,7 @@ export function Matriculas() {
   const [matriculas, setMatriculas] = useState<Matricula[] | null>(null)
   const [alunos, setAlunos] = useState<Aluno[]>([])
   const [materias, setMaterias] = useState<Materia[]>([])
+  const [professores, setProfessores] = useState<Professor[]>([])
   const [erro, setErro] = useState<string | null>(null)
   const [carregando, setCarregando] = useState(true)
   const [enviando, setEnviando] = useState(false)
@@ -70,11 +72,13 @@ export function Matriculas() {
     Promise.all([
       api.get<Aluno[]>('/alunos'),
       api.get<Materia[]>('/materias'),
+      api.get<Professor[]>('/professores'),
       carregarMatriculas(),
     ])
-      .then(([alunosRes, materiasRes]) => {
+      .then(([alunosRes, materiasRes, professoresRes]) => {
         setAlunos(alunosRes.data)
         setMaterias(materiasRes.data)
+        setProfessores(professoresRes.data)
         if (alunosRes.data.length > 0) {
           const primeiro = alunosRes.data[0]
           setAlunoId(String(primeiro.id))
@@ -100,6 +104,25 @@ export function Matriculas() {
     )
   }, [matriculas, filtro])
 
+  const alunosAgrupados = useMemo(() => {
+    const mapa = new Map<string, { alunoNome: string; alunoMatricula?: string; cursoNome: string; matriculas: typeof matriculasFiltradas }>()
+    matriculasFiltradas.forEach((m) => {
+      const chave = m.alunoMatricula ?? m.alunoNome
+      const grupo = mapa.get(chave)
+      if (grupo) {
+        grupo.matriculas.push(m)
+      } else {
+        mapa.set(chave, {
+          alunoNome: m.alunoNome,
+          alunoMatricula: m.alunoMatricula,
+          cursoNome: m.cursoNome,
+          matriculas: [m],
+        })
+      }
+    })
+    return Array.from(mapa.values())
+  }, [matriculasFiltradas])
+
   const stats = useMemo(() => {
     const lista = matriculas ?? []
     return {
@@ -118,6 +141,17 @@ export function Matriculas() {
     if (!alunoSelecionado) return []
     return materias.filter((m) => m.cursoId === alunoSelecionado.curso.id)
   }, [materias, alunoSelecionado])
+
+  const professorPorMateria = useMemo(() => {
+    const mapa = new Map<number, string>()
+    professores.forEach((p) => {
+      p.materiaIds?.forEach((id) => {
+        const atual = mapa.get(id)
+        mapa.set(id, atual ? `${atual}, ${p.nome}` : p.nome)
+      })
+    })
+    return mapa
+  }, [professores])
 
   function handleAlunoChange(novoAlunoId: string) {
     setAlunoId(novoAlunoId)
@@ -199,7 +233,7 @@ export function Matriculas() {
         <Card>
           <CardHeader>
             <CardTitle className="flex items-center gap-2">
-              <Plus className="h-4 w-4 text-primary" />
+              <PlusIcon className="h-4 w-4 text-primary" />
               Nova matrícula
             </CardTitle>
             <CardDescription>
@@ -250,6 +284,9 @@ export function Matriculas() {
                     {materiasDoCurso.map((m) => (
                       <SelectItem key={m.id} value={String(m.id)}>
                         {m.nome}
+                        {professorPorMateria.get(m.id)
+                          ? ` · Prof. ${professorPorMateria.get(m.id)}`
+                          : ' · Sem professor'}
                       </SelectItem>
                     ))}
                   </SelectContent>
@@ -329,7 +366,7 @@ export function Matriculas() {
         </Card>
       </section>
 
-      <div className="grid gap-4 sm:grid-cols-3">
+      <div className="mb-8 grid gap-4 sm:grid-cols-3">
         <StatCard titulo="Total" valor={stats.total} descricao="Matrículas registradas" />
         <StatCard titulo="Ativas" valor={stats.ativas} descricao="Em andamento" destaque />
         <StatCard titulo="Concluídas" valor={stats.concluidas} descricao="Finalizadas" />
@@ -362,57 +399,61 @@ export function Matriculas() {
             icone={<ClipboardList className="h-7 w-7" />}
           />
         ) : (
-          <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
-            {matriculasFiltradas.map((m) => (
-              <Card key={m.id} className="gap-0 overflow-hidden p-0">
+          <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
+            {alunosAgrupados.map((grupo) => (
+              <Card key={grupo.alunoNome + grupo.alunoMatricula} className="gap-0 overflow-hidden p-0">
                 <CardContent className="flex-1 space-y-3 p-5">
-                  <div className="flex items-start justify-between gap-3">
+                  <div className="flex items-start gap-3">
                     <div className="min-w-0 flex-1">
                       <p className="truncate font-display text-base font-semibold leading-tight">
-                        {m.alunoNome}
+                        {grupo.alunoNome}
                       </p>
-                      <p className="text-xs text-muted-foreground">ID {m.alunoId}</p>
+                      <p className="text-xs text-muted-foreground">
+                        {grupo.alunoMatricula ?? `ID ${grupo.matriculas[0].alunoId}`}
+                      </p>
+                      <p className="text-xs text-muted-foreground">{grupo.cursoNome}</p>
                     </div>
-                    <BadgeSituacao situacao={m.situacao} />
                   </div>
 
-                  <div className="flex flex-wrap gap-1.5">
-                    <Badge variant="outline" className="font-medium">{m.materiaNome}</Badge>
-                    <Badge variant="secondary" className="font-medium">{m.cursoNome}</Badge>
-                  </div>
-
-                  <div className="flex items-center justify-between text-xs text-muted-foreground">
-                    <span>{m.dataCriacao}</span>
-                    {m.nota != null ? (
-                      <span className="font-semibold text-foreground">Nota: {m.nota.toFixed(1)}</span>
-                    ) : (
-                      <span className="text-muted-foreground/50">Sem nota</span>
-                    )}
+                  <div className="divide-y divide-border rounded-lg border">
+                    {grupo.matriculas.map((m) => (
+                      <div key={m.id} className="flex items-center justify-between gap-2 px-3 py-2">
+                        <div className="min-w-0 flex-1">
+                          <p className="truncate text-xs font-medium">{m.materiaNome}</p>
+                          <div className="mt-0.5 flex items-center gap-2 text-xs text-muted-foreground">
+                            <BadgeSituacao situacao={m.situacao} />
+                            {m.nota != null ? (
+                              <span className="font-semibold text-foreground">· {m.nota.toFixed(1)}</span>
+                            ) : null}
+                          </div>
+                        </div>
+                        <div className="flex shrink-0 gap-1">
+                          {m.situacao === 'ATIVA' ? (
+                            <Button
+                              type="button"
+                              variant="ghost"
+                              size="sm"
+                              className="h-7 gap-1 px-2 text-xs"
+                              onClick={() => handleAlterarSituacao(m.id, 'CONCLUIDA')}
+                            >
+                              <CheckIcon className="h-3.5 w-3.5" />
+                              Concluir
+                            </Button>
+                          ) : null}
+                          <Button
+                            type="button"
+                            variant="ghost"
+                            size="sm"
+                            className="h-7 gap-1 px-2 text-xs text-destructive hover:text-destructive"
+                            onClick={() => handleExcluir(m.id, m.alunoNome)}
+                          >
+                            <TrashIcon className="h-3.5 w-3.5" />
+                          </Button>
+                        </div>
+                      </div>
+                    ))}
                   </div>
                 </CardContent>
-
-                <div className="flex border-t divide-x divide-border">
-                  {m.situacao === 'ATIVA' ? (
-                    <Button
-                      type="button"
-                      variant="ghost"
-                      className="flex-1 rounded-none gap-1.5 text-xs font-medium"
-                      onClick={() => handleAlterarSituacao(m.id, 'CONCLUIDA')}
-                    >
-                      <CheckCircle2 className="h-3.5 w-3.5" />
-                      Concluir
-                    </Button>
-                  ) : null}
-                  <Button
-                    type="button"
-                    variant="ghost"
-                    className="flex-1 rounded-none gap-1.5 text-xs font-medium text-destructive hover:text-destructive"
-                    onClick={() => handleExcluir(m.id, m.alunoNome)}
-                  >
-                    <Trash2 className="h-3.5 w-3.5" />
-                    Excluir
-                  </Button>
-                </div>
               </Card>
             ))}
           </div>

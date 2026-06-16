@@ -1,5 +1,6 @@
 import { useCallback, useEffect, useMemo, useState } from 'react'
-import { Info, PencilLine, Search } from 'lucide-react'
+import { Info, Search } from 'lucide-react'
+import { PencilIcon } from '../components/ui/AnimatedIcons'
 import { AlertaErro, PageHeader } from '../components/PageHeader'
 import { Button } from '@/components/ui/button'
 import { Card, CardContent } from '@/components/ui/card'
@@ -23,19 +24,6 @@ import { api } from '../services/api'
 import type { Matricula, NotasRequest } from '../types/matricula'
 import { getUsuario } from '../utils/auth'
 import { mensagemErroApi } from '../utils/apiError'
-import { NotasFrequenciaChart } from '../components/charts/NotasFrequenciaChart'
-import { ContagemBarChart } from '../components/charts/ContagemBarChart'
-import { SituacaoPieChart } from '../components/charts/SituacaoPieChart'
-import { DistribuicaoNotasChart } from '../components/charts/DistribuicaoNotasChart'
-import { MediaBarChart } from '../components/charts/MediaBarChart'
-import { FrequenciaBarChart } from '../components/charts/FrequenciaBarChart'
-import {
-  agruparContagem,
-  agruparNotasPorFaixa,
-  contagemPorCampo,
-  encurtarNome,
-  mediaNotasPorCampo,
-} from '../utils/charts'
 import { useToast } from '../components/ui/Toast'
 
 type EdicaoNotas = {
@@ -98,23 +86,6 @@ export function ProfessorNotas() {
     return { alunos: lista.length, comNota, materias }
   }, [turmas])
 
-  const chartData = useMemo(() => {
-    const lista = turmas ?? []
-    const comNota = lista.filter((t) => t.nota != null)
-    const notas = comNota.map((t) => ({
-      nome: encurtarNome(t.alunoNome, 14),
-      nota: t.nota,
-      frequencia: t.frequencia,
-    }))
-    const materias = contagemPorCampo(lista, (t) => t.materiaNome)
-    const situacoes = agruparContagem(lista.map((t) => t.situacao))
-    const faixasNota = agruparNotasPorFaixa(lista.map((t) => t.nota))
-    const mediaPorMateria = mediaNotasPorCampo(lista, (t) => t.materiaNome, (t) => t.nota)
-    const frequencias = lista
-      .filter((t) => t.frequencia != null)
-      .map((t) => ({ name: encurtarNome(t.alunoNome, 14), value: t.frequencia! }))
-    return { notas, materias, situacoes, faixasNota, mediaPorMateria, frequencias }
-  }, [turmas])
 
   function iniciarEdicao(m: Matricula) {
     setEdicao({
@@ -199,45 +170,6 @@ export function ProfessorNotas() {
         </CardContent>
       </Card>
 
-      {(turmas?.length ?? 0) > 0 ? (
-        <div className="mb-8 grid gap-8 sm:grid-cols-2 xl:grid-cols-3">
-          <ContagemBarChart
-            titulo="Alunos por matéria"
-            descricao="Quantidade de alunos em cada turma."
-            dados={chartData.materias}
-            cor="#d4af37"
-          />
-          <NotasFrequenciaChart
-            titulo="Notas lançadas"
-            descricao="Desempenho dos alunos com nota registrada."
-            dados={chartData.notas}
-            vazio="Nenhuma nota lançada ainda."
-          />
-          <SituacaoPieChart
-            titulo="Situação das matrículas"
-            descricao="Ativas, concluídas e outras."
-            dados={chartData.situacoes}
-          />
-          <DistribuicaoNotasChart
-            titulo="Distribuição de notas"
-            descricao="Faixas de desempenho nas turmas."
-            dados={chartData.faixasNota}
-            vazio="Nenhuma nota lançada ainda."
-          />
-          <MediaBarChart
-            titulo="Média por matéria"
-            descricao="Nota média de cada turma (0–10)."
-            dados={chartData.mediaPorMateria}
-            vazio="Lance notas para calcular médias."
-          />
-          <FrequenciaBarChart
-            titulo="Frequência dos alunos"
-            descricao="Presença registrada por aluno (%)."
-            dados={chartData.frequencias}
-            vazio="Frequência ainda não registrada."
-          />
-        </div>
-      ) : null}
 
       <div className="mb-4 flex flex-wrap items-end justify-between gap-4">
         <div>
@@ -262,7 +194,7 @@ export function ProfessorNotas() {
         <EmptyState
           titulo="Nenhum aluno nas suas turmas"
           descricao="Peça à secretaria para vincular matérias ao seu cadastro de professor e matricular alunos."
-          icone={<PencilLine className="h-7 w-7" />}
+          icone={<PencilIcon className="h-7 w-7" />}
         />
       ) : (
         <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
@@ -312,7 +244,7 @@ export function ProfessorNotas() {
                     className="w-full rounded-none gap-1.5 text-xs font-medium"
                     onClick={() => iniciarEdicao(t)}
                   >
-                    <PencilLine className="h-3.5 w-3.5" />
+                    <PencilIcon className="h-3.5 w-3.5" />
                     Lançar notas
                   </Button>
                 ) : (

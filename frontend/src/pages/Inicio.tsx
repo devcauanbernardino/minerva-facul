@@ -141,11 +141,10 @@ export function Inicio() {
           <div className="relative z-10 flex flex-wrap items-end justify-between gap-6">
             <div>
               <Badge className="mb-3 border-minerva-marmore/20 bg-minerva-marmore/15 text-minerva-marmore backdrop-blur-sm">
-                <Sparkles className="h-3 w-3" />
                 {tituloPainel}
               </Badge>
               <p className="text-sm font-medium text-minerva-marmore/80">{saudacao()},</p>
-              <h1 className="mt-1 font-display text-3xl font-bold tracking-tight sm:text-4xl">
+              <h1 className="mt-1 font-display text-3xl font-bold tracking-tight text-minerva-marmore sm:text-4xl">
                 {usuario.nome.split(' ')[0]}
               </h1>
               <p className="mt-3 max-w-xl text-sm leading-relaxed text-minerva-marmore/85">
@@ -282,19 +281,6 @@ export function Inicio() {
         </div>
       ) : null}
 
-      {usuario?.tipo === 'SECRETARIA' ? (
-        <p className="mt-10 text-sm text-muted-foreground">
-          Documentação da API:{' '}
-          <a
-            className="font-semibold text-primary underline-offset-4 hover:underline"
-            href="http://localhost:8080/swagger-ui.html"
-            target="_blank"
-            rel="noreferrer"
-          >
-            Swagger UI
-          </a>
-        </p>
-      ) : null}
     </PageContainer>
   )
 }

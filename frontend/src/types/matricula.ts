@@ -11,6 +11,7 @@ export type Matricula = {
   id: number
   alunoId: number
   alunoNome: string
+  alunoMatricula?: string
   materiaId: number
   materiaNome: string
   cursoNome: string

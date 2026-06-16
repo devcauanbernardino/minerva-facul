@@ -108,9 +108,14 @@ public class ProfessorService {
     }
 
     private MatriculaResponse paraResponse(Matricula matricula) {
+        String alunoMatricula = usuarioRepository.findByEmail(matricula.getAluno().getEmail())
+            .map(br.com.minerva.minerva.model.Usuario::getMatricula)
+            .orElse(null);
         return new MatriculaResponse(
             matricula.getId(),
+            matricula.getAluno().getId(),
             matricula.getAluno().getNome(),
+            alunoMatricula,
             matricula.getMateria().getId(),
             matricula.getMateria().getNome(),
             matricula.getMateria().getCurso().getNome(),

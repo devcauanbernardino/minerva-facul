@@ -10,7 +10,9 @@ import lombok.NoArgsConstructor;
 public class MatriculaResponse {
 
 	private Long id;
+	private Long alunoId;
 	private String alunoNome;
+	private String alunoMatricula;
 	private Long materiaId;
 	private String materiaNome;
 	private String cursoNome;

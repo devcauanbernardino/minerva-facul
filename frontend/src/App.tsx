@@ -18,6 +18,7 @@ import { Matriculas } from './pages/Matriculas'
 import { ProfessorNotas } from './pages/ProfessorNotas'
 import { Professores } from './pages/Professores'
 import { getUsuario, labelPerfil, logout, navDoUsuario } from './utils/auth'
+import { MascoteChat } from './components/MascoteChat'
 
 function AppShell() {
   const location = useLocation()
@@ -101,6 +102,8 @@ function AppShell() {
           </Routes>
         </ProtectedRoute>
       </main>
+
+      {showHeader && usuario && <MascoteChat />}
 
       {showHeader && (
         <footer className="border-t bg-card py-5">
