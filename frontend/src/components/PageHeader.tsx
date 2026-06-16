@@ -1,5 +1,6 @@
 import { Link } from 'react-router-dom'
 import { AlertCircle, CheckCircle2, Info } from 'lucide-react'
+import { BuildingLibraryIcon } from '@heroicons/react/24/outline'
 import { HomeIcon } from './ui/AnimatedIcons'
 import { Button } from '@/components/ui/button'
 import { Alert, AlertDescription } from '@/components/ui/alert'
@@ -16,7 +17,10 @@ export function PageHeader({ titulo, subtitulo, acao }: PageHeaderProps) {
   return (
     <div className="mb-8 flex flex-wrap items-start justify-between gap-4 minerva-animate-in">
       <div className="space-y-2.5">
-        <p className="minerva-eyebrow">Minerva</p>
+        <p className="inline-flex items-center gap-2 text-xs font-semibold uppercase tracking-[0.22em] text-minerva-dourado">
+          <BuildingLibraryIcon className="h-4 w-4 shrink-0" />
+          Minerva
+        </p>
         <h1 className="font-display text-2xl font-bold tracking-tight sm:text-3xl">
           {titulo}
         </h1>
