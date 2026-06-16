@@ -278,15 +278,23 @@ export function Matriculas() {
                             ? 'Nenhuma matéria neste curso'
                             : 'Selecione'
                       }
-                    />
+                    >
+                      {materiaId
+                        ? (materiasDoCurso.find((m) => String(m.id) === materiaId)?.nome ?? 'Selecione')
+                        : undefined}
+                    </SelectValue>
                   </SelectTrigger>
                   <SelectContent>
                     {materiasDoCurso.map((m) => (
-                      <SelectItem key={m.id} value={String(m.id)}>
-                        {m.nome}
-                        {professorPorMateria.get(m.id)
-                          ? ` · Prof. ${professorPorMateria.get(m.id)}`
-                          : ' · Sem professor'}
+                      <SelectItem key={m.id} value={String(m.id)} textValue={m.nome} className="items-start py-2">
+                        <div className="flex flex-col gap-0.5">
+                          <span className="font-medium leading-tight">{m.nome}</span>
+                          <span className="text-xs leading-tight text-muted-foreground">
+                            {professorPorMateria.get(m.id)
+                              ? `Prof. ${professorPorMateria.get(m.id)}`
+                              : 'Sem professor atribuído'}
+                          </span>
+                        </div>
                       </SelectItem>
                     ))}
                   </SelectContent>

@@ -12,4 +12,5 @@ public class MateriaResponse {
     private Long cursoId;
     private String cursoNome;
     private List<Long> prerequisitoIds;
+    private List<Long> professorIds;
 }

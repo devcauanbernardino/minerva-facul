@@ -4,6 +4,7 @@ export type Materia = {
   cursoId: number
   cursoNome: string
   prerequisitoIds: number[]
+  professorIds: number[]
 }
 
 export type MateriaRequest = {

@@ -8,8 +8,10 @@ import br.com.minerva.minerva.dto.MateriaResponse;
 import br.com.minerva.minerva.exception.RecursoNaoEncontradoException;
 import br.com.minerva.minerva.model.Curso;
 import br.com.minerva.minerva.model.Materia;
+import br.com.minerva.minerva.model.Professor;
 import br.com.minerva.minerva.repository.CursoRepository;
 import br.com.minerva.minerva.repository.MateriaRepository;
+import br.com.minerva.minerva.repository.ProfessorRepository;
 import lombok.RequiredArgsConstructor;
 
 @Service
@@ -17,42 +19,69 @@ import lombok.RequiredArgsConstructor;
 public class MateriaService {
     private final MateriaRepository materiaRepository;
     private final CursoRepository cursoRepository;
+    private final ProfessorRepository professorRepository;
 
     @Transactional(readOnly = true)
     public List<MateriaResponse> listarTodos() {
         return materiaRepository.findAll().stream().map(this::paraResponse).toList();
     }
+
     @Transactional(readOnly = true)
-    public MateriaResponse buscarPorId(Long id){
+    public MateriaResponse buscarPorId(Long id) {
         return paraResponse(buscarEntidade(id));
     }
+
     @Transactional
-    public MateriaResponse criar(MateriaRequest request){
+    public MateriaResponse criar(MateriaRequest request) {
         Curso curso = cursoRepository.findById(request.getCursoId())
-             .orElseThrow(() -> new RecursoNaoEncontradoException("Curso não encontrado com id: " + request.getCursoId()));
+            .orElseThrow(() -> new RecursoNaoEncontradoException("Curso não encontrado com id: " + request.getCursoId()));
         Materia m = new Materia();
         m.setNome(request.getNome());
         m.setCurso(curso);
         m.setPrerequisitos(buscarPrerequisitos(request.getPrerequisitoIds(), null));
         return paraResponse(materiaRepository.save(m));
     }
+
     @Transactional
-    public MateriaResponse atualizar(Long id, MateriaRequest request){
-         Materia m = buscarEntidade(id);
-         Curso curso = cursoRepository.findById(request.getCursoId())
-                .orElseThrow(() -> new RecursoNaoEncontradoException("Curso não encontrado com id: " + request.getCursoId()));
-         m.setNome(request.getNome());
-         m.setCurso(curso);
-         m.setPrerequisitos(buscarPrerequisitos(request.getPrerequisitoIds(), id));
-         return paraResponse(materiaRepository.save(m));
+    public MateriaResponse atualizar(Long id, MateriaRequest request) {
+        Materia m = buscarEntidade(id);
+        Curso curso = cursoRepository.findById(request.getCursoId())
+            .orElseThrow(() -> new RecursoNaoEncontradoException("Curso não encontrado com id: " + request.getCursoId()));
+        m.setNome(request.getNome());
+        m.setCurso(curso);
+        m.setPrerequisitos(buscarPrerequisitos(request.getPrerequisitoIds(), id));
+        return paraResponse(materiaRepository.save(m));
     }
+
     @Transactional
-    public void excluir(Long id){
+    public MateriaResponse vincularProfessores(Long materiaId, List<Long> professorIds) {
+        Materia materia = buscarEntidade(materiaId);
+
+        // Remove esta matéria de todos os professores que a possuem
+        List<Professor> todos = professorRepository.findAll();
+        for (Professor p : todos) {
+            p.getMaterias().removeIf(m -> m.getId().equals(materiaId));
+            professorRepository.save(p);
+        }
+
+        // Adiciona esta matéria aos professores selecionados
+        List<Professor> selecionados = professorRepository.findAllById(professorIds);
+        for (Professor p : selecionados) {
+            p.getMaterias().add(materia);
+            professorRepository.save(p);
+        }
+
+        return paraResponse(materia);
+    }
+
+    @Transactional
+    public void excluir(Long id) {
         materiaRepository.delete(buscarEntidade(id));
     }
-     private Materia buscarEntidade(Long id){
-      return materiaRepository.findById(id)
-         .orElseThrow(() -> new RecursoNaoEncontradoException("Matéria não encontrada com id: " + id));
+
+    private Materia buscarEntidade(Long id) {
+        return materiaRepository.findById(id)
+            .orElseThrow(() -> new RecursoNaoEncontradoException("Matéria não encontrada com id: " + id));
     }
 
     private List<Materia> buscarPrerequisitos(List<Long> prerequisitoIds, Long materiaId) {
@@ -69,13 +98,15 @@ public class MateriaService {
         return prerequisitos;
     }
 
-     private MateriaResponse paraResponse(Materia m){
+    private MateriaResponse paraResponse(Materia m) {
         List<Long> prerequisitoIds = m.getPrerequisitos().stream().map(Materia::getId).toList();
+        List<Long> professorIds = m.getProfessores().stream().map(Professor::getId).toList();
         return new MateriaResponse(
             m.getId(),
             m.getNome(),
             m.getCurso().getId(),
             m.getCurso().getNome(),
-            prerequisitoIds);
-     }
+            prerequisitoIds,
+            professorIds);
+    }
 }

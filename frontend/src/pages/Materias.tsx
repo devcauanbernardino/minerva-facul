@@ -1,6 +1,6 @@
 import { useEffect, useMemo, useState } from 'react'
 import { Link } from 'react-router-dom'
-import { BookOpen, Info, ListTree } from 'lucide-react'
+import { BookOpen, Info, ListTree, UserRound } from 'lucide-react'
 import { PlusIcon, TrashIcon } from '../components/ui/AnimatedIcons'
 import { AlertaErro, PageHeader } from '../components/PageHeader'
 import { Badge } from '@/components/ui/badge'
@@ -37,6 +37,7 @@ import { StatCard } from '../components/ui/StatCard'
 import { api } from '../services/api'
 import type { Curso } from '../types/curso'
 import type { Materia, MateriaRequest } from '../types/materia'
+import type { Professor } from '../types/professor'
 import { mensagemErroApi } from '../utils/apiError'
 import { useToast } from '../components/ui/Toast'
 
@@ -44,24 +45,34 @@ export function Materias() {
   const { mostrarSucesso, mostrarErro } = useToast()
   const [materias, setMaterias] = useState<Materia[] | null>(null)
   const [cursos, setCursos] = useState<Curso[]>([])
+  const [professores, setProfessores] = useState<Professor[]>([])
   const [erro, setErro] = useState<string | null>(null)
   const [nome, setNome] = useState('')
   const [cursoId, setCursoId] = useState('')
   const [prerequisitoIds, setPrerequisitoIds] = useState<number[]>([])
   const [enviando, setEnviando] = useState(false)
+
+  // Dialog pré-requisitos
   const [editando, setEditando] = useState<Materia | null>(null)
   const [prerequisitosEdicao, setPrerequisitosEdicao] = useState<number[]>([])
   const [salvandoEdicao, setSalvandoEdicao] = useState(false)
+
+  // Dialog professores
+  const [editandoProf, setEditandoProf] = useState<Materia | null>(null)
+  const [professoresEdicao, setProfessoresEdicao] = useState<number[]>([])
+  const [salvandoProf, setSalvandoProf] = useState(false)
 
   function carregar() {
     setErro(null)
     Promise.all([
       api.get<Materia[]>('/materias'),
       api.get<Curso[]>('/cursos'),
+      api.get<Professor[]>('/professores'),
     ])
-      .then(([materiasRes, cursosRes]) => {
+      .then(([materiasRes, cursosRes, professoresRes]) => {
         setMaterias(materiasRes.data)
         setCursos(cursosRes.data)
+        setProfessores(professoresRes.data)
         if (cursosRes.data.length > 0 && !cursoId) {
           setCursoId(String(cursosRes.data[0].id))
         }
@@ -96,12 +107,15 @@ export function Materias() {
       .filter((nome): nome is string => Boolean(nome))
   }
 
-  function handleSubmit(e: React.FormEvent) {
+  function nomesProfessores(ids: number[]) {
+    return ids
+      .map((id) => professores.find((p) => p.id === id)?.nome)
+      .filter((n): n is string => Boolean(n))
+  }
+
+  function handleSubmit(e: { preventDefault(): void }) {
     e.preventDefault()
-    if (!cursoId) {
-      setErro('Selecione um curso.')
-      return
-    }
+    if (!cursoId) { setErro('Selecione um curso.'); return }
     setEnviando(true)
     setErro(null)
     const payload: MateriaRequest = { nome, cursoId: Number(cursoId), prerequisitoIds }
@@ -128,10 +142,11 @@ export function Materias() {
       .catch((err) => mostrarErro(mensagemErroApi(err, 'Erro ao excluir matéria.')))
   }
 
-  function togglePrerequisito(lista: number[], id: number, atualizar: (proximo: number[]) => void) {
-    atualizar(lista.includes(id) ? lista.filter((p) => p !== id) : [...lista, id])
+  function toggleItem(lista: number[], id: number, atualizar: (next: number[]) => void) {
+    atualizar(lista.includes(id) ? lista.filter((x) => x !== id) : [...lista, id])
   }
 
+  // --- Pré-requisitos ---
   function abrirEdicaoPrerequisitos(materia: Materia) {
     setEditando(materia)
     setPrerequisitosEdicao(materia.prerequisitoIds)
@@ -140,7 +155,6 @@ export function Materias() {
   function handleSalvarPrerequisitos() {
     if (!editando) return
     setSalvandoEdicao(true)
-    setErro(null)
     const payload: MateriaRequest = {
       nome: editando.nome,
       cursoId: editando.cursoId,
@@ -157,22 +171,35 @@ export function Materias() {
       .finally(() => setSalvandoEdicao(false))
   }
 
+  // --- Professores ---
+  function abrirEdicaoProfessores(materia: Materia) {
+    setEditandoProf(materia)
+    setProfessoresEdicao(materia.professorIds)
+  }
+
+  function handleSalvarProfessores() {
+    if (!editandoProf) return
+    setSalvandoProf(true)
+    api
+      .put<Materia>(`/materias/${editandoProf.id}/professores`, professoresEdicao)
+      .then((res) => {
+        setMaterias((prev) => prev?.map((m) => (m.id === res.data.id ? res.data : m)) ?? [])
+        mostrarSucesso('Professores atualizados.')
+        setEditandoProf(null)
+      })
+      .catch((err) => mostrarErro(mensagemErroApi(err, 'Erro ao atualizar professores.')))
+      .finally(() => setSalvandoProf(false))
+  }
+
   return (
     <PageContainer>
-      <PageHeader
-        titulo="Matérias"
-        subtitulo="Disciplinas vinculadas aos cursos."
-      />
+      <PageHeader titulo="Matérias" subtitulo="Disciplinas vinculadas aos cursos." />
 
       {erro ? <AlertaErro mensagem={erro} /> : null}
 
       <div className="mb-8 grid gap-4 sm:grid-cols-2">
         <StatCard titulo="Matérias" valor={stats.total} descricao="Disciplinas cadastradas" destaque />
-        <StatCard
-          titulo="Cursos atendidos"
-          valor={stats.cursosComMateria}
-          descricao="Com disciplinas vinculadas"
-        />
+        <StatCard titulo="Cursos atendidos" valor={stats.cursosComMateria} descricao="Com disciplinas vinculadas" />
       </div>
 
       <section className="mb-10 grid gap-6 lg:grid-cols-[1.5fr_1fr]">
@@ -198,21 +225,13 @@ export function Materias() {
               </div>
               <div className="space-y-1.5">
                 <Label>Curso</Label>
-                <Select
-                  value={cursoId}
-                  onValueChange={(value) => {
-                    setCursoId(value)
-                    setPrerequisitoIds([])
-                  }}
-                >
+                <Select value={cursoId} onValueChange={(v) => { setCursoId(v); setPrerequisitoIds([]) }}>
                   <SelectTrigger>
                     <SelectValue placeholder="Selecione um curso" />
                   </SelectTrigger>
                   <SelectContent>
                     {cursos.map((c) => (
-                      <SelectItem key={c.id} value={String(c.id)}>
-                        {c.nome}
-                      </SelectItem>
+                      <SelectItem key={c.id} value={String(c.id)}>{c.nome}</SelectItem>
                     ))}
                   </SelectContent>
                 </Select>
@@ -222,15 +241,10 @@ export function Materias() {
                   <Label>Pré-requisitos (opcional)</Label>
                   <div className="max-h-40 space-y-2 overflow-y-auto rounded-lg border border-input p-3">
                     {candidatasPrerequisito.map((m) => (
-                      <label
-                        key={m.id}
-                        className="flex items-center gap-2 text-sm font-normal text-foreground"
-                      >
+                      <label key={m.id} className="flex items-center gap-2 text-sm font-normal text-foreground">
                         <Checkbox
                           checked={prerequisitoIds.includes(m.id)}
-                          onCheckedChange={() =>
-                            togglePrerequisito(prerequisitoIds, m.id, setPrerequisitoIds)
-                          }
+                          onCheckedChange={() => toggleItem(prerequisitoIds, m.id, setPrerequisitoIds)}
                         />
                         {m.nome}
                       </label>
@@ -254,12 +268,8 @@ export function Materias() {
           </CardHeader>
           <CardContent className="space-y-3 text-sm text-muted-foreground">
             <p>
-              As matérias são a base para matrículas e lançamento de notas. Vincule professores na
-              tela de{' '}
-              <Link to="/professores" className="font-semibold text-primary hover:underline">
-                Professores
-              </Link>
-              .
+              Gerencie os professores de cada matéria clicando em{' '}
+              <span className="font-semibold text-foreground">Professores</span> no cartão da disciplina.
             </p>
           </CardContent>
         </Card>
@@ -284,50 +294,69 @@ export function Materias() {
                       <BookOpen className="h-5 w-5" />
                     </div>
                     <div className="min-w-0 flex-1">
-                      <p className="truncate font-display text-base font-semibold leading-tight">
-                        {m.nome}
-                      </p>
-                      <p className="text-xs text-muted-foreground">ID {m.id}</p>
+                      <p className="truncate font-display text-base font-semibold leading-tight">{m.nome}</p>
+                      <p className="text-xs text-muted-foreground">{m.cursoNome}</p>
                     </div>
                   </div>
 
+                  {/* Professores */}
                   <div className="flex flex-wrap gap-1.5">
-                    <Badge variant="outline" className="font-medium">
-                      {m.cursoNome}
-                    </Badge>
-                    {m.prerequisitoIds.length === 0 ? (
+                    {m.professorIds.length === 0 ? (
                       <Badge variant="secondary" className="font-medium text-muted-foreground">
-                        Sem pré-requisitos
+                        Sem professor
                       </Badge>
                     ) : (
-                      nomesPrerequisitos(m.prerequisitoIds).map((nome) => (
-                        <Badge key={nome} variant="secondary" className="font-medium">
-                          {nome}
+                      nomesProfessores(m.professorIds).map((n) => (
+                        <Badge key={n} variant="outline" className="font-medium text-primary border-primary/30">
+                          <UserRound className="h-3 w-3 mr-1" />
+                          {n}
                         </Badge>
                       ))
                     )}
                   </div>
+
+                  {/* Pré-requisitos */}
+                  {m.prerequisitoIds.length > 0 ? (
+                    <div className="flex flex-wrap gap-1.5">
+                      {nomesPrerequisitos(m.prerequisitoIds).map((n) => (
+                        <Badge key={n} variant="secondary" className="font-medium">{n}</Badge>
+                      ))}
+                    </div>
+                  ) : null}
                 </CardContent>
 
-                <div className="flex border-t divide-x divide-border">
-                  <Button
-                    type="button"
-                    variant="ghost"
-                    className="flex-1 rounded-none gap-1.5 text-xs font-medium"
-                    onClick={() => abrirEdicaoPrerequisitos(m)}
-                  >
-                    <ListTree className="h-3.5 w-3.5" />
-                    Pré-requisitos
-                  </Button>
-                  <Button
-                    type="button"
-                    variant="ghost"
-                    className="flex-1 rounded-none gap-1.5 text-xs font-medium text-destructive hover:text-destructive"
-                    onClick={() => handleExcluir(m.id)}
-                  >
-                    <TrashIcon className="h-3.5 w-3.5" />
-                    Excluir
-                  </Button>
+                <div className="flex flex-col border-t">
+                  <div className="flex divide-x divide-border">
+                    <Button
+                      type="button"
+                      variant="ghost"
+                      className="flex-1 rounded-none gap-1.5 text-xs font-medium"
+                      onClick={() => abrirEdicaoProfessores(m)}
+                    >
+                      <UserRound className="h-3.5 w-3.5" />
+                      Professores
+                    </Button>
+                    <Button
+                      type="button"
+                      variant="ghost"
+                      className="flex-1 rounded-none gap-1.5 text-xs font-medium"
+                      onClick={() => abrirEdicaoPrerequisitos(m)}
+                    >
+                      <ListTree className="h-3.5 w-3.5" />
+                      Pré-requisitos
+                    </Button>
+                  </div>
+                  <div className="border-t">
+                    <Button
+                      type="button"
+                      variant="ghost"
+                      className="w-full rounded-none gap-1.5 text-xs font-medium text-destructive hover:text-destructive"
+                      onClick={() => handleExcluir(m.id)}
+                    >
+                      <TrashIcon className="h-3.5 w-3.5" />
+                      Excluir
+                    </Button>
+                  </div>
                 </div>
               </Card>
             ))}
@@ -335,6 +364,50 @@ export function Materias() {
         )}
       </section>
 
+      {/* Dialog — Professores */}
+      <Dialog open={editandoProf != null} onOpenChange={(open) => !open && setEditandoProf(null)}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>Professores de {editandoProf?.nome}</DialogTitle>
+            <DialogDescription>
+              Selecione quais professores ministram esta disciplina.
+            </DialogDescription>
+          </DialogHeader>
+          {professores.length === 0 ? (
+            <p className="text-sm text-muted-foreground">
+              Nenhum professor cadastrado.{' '}
+              <Link to="/professores" className="font-semibold text-primary hover:underline">
+                Cadastrar professor
+              </Link>
+            </p>
+          ) : (
+            <div className="max-h-72 space-y-2 overflow-y-auto rounded-lg border border-input p-3">
+              {professores.map((p) => (
+                <label key={p.id} className="flex items-center gap-2 text-sm font-normal text-foreground">
+                  <Checkbox
+                    checked={professoresEdicao.includes(p.id)}
+                    onCheckedChange={() => toggleItem(professoresEdicao, p.id, setProfessoresEdicao)}
+                  />
+                  <span>
+                    <span className="font-medium">{p.nome}</span>
+                    {p.especialidade ? (
+                      <span className="ml-1.5 text-xs text-muted-foreground">· {p.especialidade}</span>
+                    ) : null}
+                  </span>
+                </label>
+              ))}
+            </div>
+          )}
+          <DialogFooter>
+            <Button type="button" variant="outline" onClick={() => setEditandoProf(null)}>Cancelar</Button>
+            <Button type="button" disabled={salvandoProf} onClick={handleSalvarProfessores}>
+              {salvandoProf ? 'Salvando…' : 'Salvar'}
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
+      {/* Dialog — Pré-requisitos */}
       <Dialog open={editando != null} onOpenChange={(open) => !open && setEditando(null)}>
         <DialogContent>
           <DialogHeader>
@@ -349,31 +422,21 @@ export function Materias() {
               {(materias ?? [])
                 .filter((m) => m.cursoId === editando.cursoId && m.id !== editando.id)
                 .map((m) => (
-                  <label
-                    key={m.id}
-                    className="flex items-center gap-2 text-sm font-normal text-foreground"
-                  >
+                  <label key={m.id} className="flex items-center gap-2 text-sm font-normal text-foreground">
                     <Checkbox
                       checked={prerequisitosEdicao.includes(m.id)}
-                      onCheckedChange={() =>
-                        togglePrerequisito(prerequisitosEdicao, m.id, setPrerequisitosEdicao)
-                      }
+                      onCheckedChange={() => toggleItem(prerequisitosEdicao, m.id, setPrerequisitosEdicao)}
                     />
                     {m.nome}
                   </label>
                 ))}
-              {(materias ?? []).filter((m) => m.cursoId === editando.cursoId && m.id !== editando.id)
-                .length === 0 ? (
-                <p className="text-sm text-muted-foreground">
-                  Não há outras matérias cadastradas neste curso.
-                </p>
+              {(materias ?? []).filter((m) => m.cursoId === editando.cursoId && m.id !== editando.id).length === 0 ? (
+                <p className="text-sm text-muted-foreground">Não há outras matérias neste curso.</p>
               ) : null}
             </div>
           ) : null}
           <DialogFooter>
-            <Button type="button" variant="outline" onClick={() => setEditando(null)}>
-              Cancelar
-            </Button>
+            <Button type="button" variant="outline" onClick={() => setEditando(null)}>Cancelar</Button>
             <Button type="button" disabled={salvandoEdicao} onClick={handleSalvarPrerequisitos}>
               {salvandoEdicao ? 'Salvando…' : 'Salvar'}
             </Button>

@@ -49,6 +49,13 @@ public class MateriaController {
         return ResponseEntity.ok(materiaService.atualizar(id, request));
     }
 
+    @PutMapping("/{id}/professores")
+    public ResponseEntity<MateriaResponse> vincularProfessores(
+            @PathVariable Long id,
+            @RequestBody List<Long> professorIds) {
+        return ResponseEntity.ok(materiaService.vincularProfessores(id, professorIds));
+    }
+
     @DeleteMapping("/{id}")
     public ResponseEntity<Void> deletar(@PathVariable Long id) {
         materiaService.excluir(id);

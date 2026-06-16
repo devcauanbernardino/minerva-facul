@@ -1,11 +1,10 @@
 import { useEffect, useRef } from 'react'
 import { Player } from '@lordicon/react'
-import { Plus, Home } from 'lucide-react'
+import { Plus, Home, Pencil } from 'lucide-react'
 import { cn } from '@/lib/utils'
 
 import trashIcon from '../../assets/icons/trash.json'
 import checkIcon from '../../assets/icons/check.json'
-import editIcon from '../../assets/icons/edit.json'
 import sendIcon from '../../assets/icons/send.json'
 import downloadIcon from '../../assets/icons/download.json'
 
@@ -51,7 +50,16 @@ export function TrashIcon({ className }: IconProps) {
 }
 
 export function PencilIcon({ className }: IconProps) {
-  return <LordiconIcon icon={editIcon} className={className} />
+  return (
+    <span className="group inline-flex">
+      <Pencil
+        className={cn(
+          'transition-transform duration-200 group-hover:-rotate-12 group-hover:scale-110',
+          className,
+        )}
+      />
+    </span>
+  )
 }
 
 export function SendIcon({ className }: IconProps) {

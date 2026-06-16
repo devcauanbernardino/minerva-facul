@@ -1,6 +1,7 @@
 import { useEffect, useMemo, useState } from 'react'
 import { Link } from 'react-router-dom'
-import { Award, Lightbulb, Plus, Users } from 'lucide-react'
+import { Award, Lightbulb, Users } from 'lucide-react'
+import { PlusIcon } from '../components/ui/AnimatedIcons'
 import { AlertaErro, PageHeader } from '../components/PageHeader'
 import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
@@ -84,7 +85,7 @@ export function Alunos() {
     }
   }, [alunos])
 
-  function handleSubmit(event: React.FormEvent<HTMLFormElement>) {
+  function handleSubmit(event: { preventDefault(): void }) {
     event.preventDefault()
 
     if (!cursoId) {
@@ -134,7 +135,7 @@ export function Alunos() {
         <Card>
           <CardHeader>
             <CardTitle className="flex items-center gap-2">
-              <Plus className="h-4 w-4 text-primary" />
+              <PlusIcon className="h-4 w-4 text-primary" />
               Cadastrar novo aluno
             </CardTitle>
             <CardDescription>
