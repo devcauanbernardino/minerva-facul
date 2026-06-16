@@ -76,7 +76,7 @@ export function Login() {
   }
 
   return (
-    <div className="grid md:grid-cols-[45%_55%] bg-minerva-cinza-claro min-h-dvh">
+    <div className="grid md:grid-cols-[45%_55%] bg-minerva-cinza-claro min-h-dvh overflow-y-auto">
       <aside
         className="relative hidden md:flex flex-col justify-end overflow-hidden bg-primary p-12 text-minerva-marmore"
         style={{
@@ -99,14 +99,14 @@ export function Login() {
         </div>
       </aside>
 
-      <section className="flex min-h-dvh flex-col items-center justify-center p-6">
-        <div className="mb-8 md:hidden">
+      <section className="flex min-h-dvh flex-col items-center justify-center px-4 py-8 sm:p-6">
+        <div className="mb-6 md:hidden">
           <MinervaLogo variant="md" linkToHome showWordmark />
         </div>
 
         <div className="w-full max-w-sm">
           {/* Mascote — clique para ver contas demo */}
-          <div className="flex flex-col items-center mb-6">
+          <div className="flex flex-col items-center mb-4">
             <button
               type="button"
               onClick={() => setMostrarDemo((v) => !v)}
@@ -117,7 +117,7 @@ export function Login() {
               <img
                 src="/mascote-olhando.gif"
                 alt="Mascote Minerva"
-                className="h-28 w-28 drop-shadow-xl transition-transform duration-200 group-hover:scale-105"
+                className="h-20 w-20 sm:h-28 sm:w-28 drop-shadow-xl transition-transform duration-200 group-hover:scale-105"
               />
             </button>
 
@@ -150,7 +150,7 @@ export function Login() {
           </div>
 
           <Card className="shadow-xl border-0 ring-1 ring-black/5">
-            <CardContent className="p-8 space-y-5">
+            <CardContent className="p-5 sm:p-8 space-y-4 sm:space-y-5">
               <div className="hidden justify-center md:flex mb-2">
                 <MinervaLogo variant="sm" showWordmark />
               </div>
