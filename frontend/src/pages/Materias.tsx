@@ -1,6 +1,7 @@
 import { useEffect, useMemo, useState } from 'react'
 import { Link } from 'react-router-dom'
-import { BookOpen, Info, ListTree, Plus, Trash2 } from 'lucide-react'
+import { BookOpen, Info, ListTree } from 'lucide-react'
+import { PlusIcon, TrashIcon } from '../components/ui/AnimatedIcons'
 import { AlertaErro, PageHeader } from '../components/PageHeader'
 import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
@@ -178,7 +179,7 @@ export function Materias() {
         <Card>
           <CardHeader>
             <CardTitle className="flex items-center gap-2">
-              <Plus className="h-4 w-4 text-primary" />
+              <PlusIcon className="h-4 w-4 text-primary" />
               Nova matéria
             </CardTitle>
             <CardDescription>Cada matéria pertence a um curso.</CardDescription>
@@ -324,7 +325,7 @@ export function Materias() {
                     className="flex-1 rounded-none gap-1.5 text-xs font-medium text-destructive hover:text-destructive"
                     onClick={() => handleExcluir(m.id)}
                   >
-                    <Trash2 className="h-3.5 w-3.5" />
+                    <TrashIcon className="h-3.5 w-3.5" />
                     Excluir
                   </Button>
                 </div>

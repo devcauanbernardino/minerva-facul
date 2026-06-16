@@ -11,9 +11,11 @@ import br.com.minerva.minerva.exception.RecursoNaoEncontradoException;
 import br.com.minerva.minerva.model.Aluno;
 import br.com.minerva.minerva.model.Materia;
 import br.com.minerva.minerva.model.Matricula;
+import br.com.minerva.minerva.model.Usuario;
 import br.com.minerva.minerva.repository.AlunoRepository;
 import br.com.minerva.minerva.repository.MateriaRepository;
 import br.com.minerva.minerva.repository.MatriculaRepository;
+import br.com.minerva.minerva.repository.UsuarioRepository;
 import lombok.RequiredArgsConstructor;
 
 @Service
@@ -23,6 +25,7 @@ public class MatriculaService {
     private final AlunoRepository alunoRepository;
     private final MateriaRepository materiaRepository;
     private final MatriculaRepository matriculaRepository;
+    private final UsuarioRepository usuarioRepository;
 
     private static final double NOTA_MINIMA_APROVACAO = 6.0;
     private static final double FREQUENCIA_MINIMA_APROVACAO = 75.0;
@@ -102,9 +105,14 @@ public class MatriculaService {
 
     private MatriculaResponse paraResponse(Matricula matricula) {
         DateTimeFormatter formatter = DateTimeFormatter.ofPattern("dd/MM/yyyy");
+        String alunoMatricula = usuarioRepository.findByEmail(matricula.getAluno().getEmail())
+                .map(Usuario::getMatricula)
+                .orElse(null);
         return new MatriculaResponse(
                 matricula.getId(),
+                matricula.getAluno().getId(),
                 matricula.getAluno().getNome(),
+                alunoMatricula,
                 matricula.getMateria().getId(),
                 matricula.getMateria().getNome(),
                 matricula.getMateria().getCurso().getNome(),

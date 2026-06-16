@@ -1,5 +1,6 @@
 import { Link } from 'react-router-dom'
 import { AlertCircle, CheckCircle2, Info } from 'lucide-react'
+import { HomeIcon } from './ui/AnimatedIcons'
 import { Button } from '@/components/ui/button'
 import { Alert, AlertDescription } from '@/components/ui/alert'
 import { Separator } from '@/components/ui/separator'
@@ -27,9 +28,10 @@ export function PageHeader({ titulo, subtitulo, acao }: PageHeaderProps) {
       </div>
       <div className="flex flex-wrap items-center gap-3">
         {acao}
-        <Button variant="outline" size="sm" asChild>
+        <Button variant="outline" size="sm" asChild className="group gap-1.5">
           <Link to="/" className="no-underline hover:no-underline">
-            ← Início
+            <HomeIcon className="h-3.5 w-3.5" />
+            Início
           </Link>
         </Button>
       </div>

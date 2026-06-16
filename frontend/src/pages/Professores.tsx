@@ -1,6 +1,7 @@
 import { useEffect, useMemo, useState } from 'react'
 import { Link } from 'react-router-dom'
-import { BookOpenCheck, Pencil, Trash2, UserRound } from 'lucide-react'
+import { BookOpenCheck, UserRound } from 'lucide-react'
+import { PencilIcon, TrashIcon } from '../components/ui/AnimatedIcons'
 import { AlertaErro, PageHeader } from '../components/PageHeader'
 import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
@@ -263,7 +264,7 @@ export function Professores() {
                     className="flex-1 rounded-none gap-1.5 text-xs font-medium"
                     onClick={() => iniciarEdicao(p)}
                   >
-                    <Pencil className="h-3.5 w-3.5" />
+                    <PencilIcon className="h-3.5 w-3.5" />
                     Editar
                   </Button>
                   <Button
@@ -272,7 +273,7 @@ export function Professores() {
                     className="flex-1 rounded-none gap-1.5 text-xs font-medium text-destructive hover:text-destructive"
                     onClick={() => handleExcluir(p.id)}
                   >
-                    <Trash2 className="h-3.5 w-3.5" />
+                    <TrashIcon className="h-3.5 w-3.5" />
                     Excluir
                   </Button>
                 </div>

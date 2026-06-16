@@ -1,5 +1,6 @@
 import { useEffect, useMemo, useState } from 'react'
-import { Clock3, GraduationCap, Layers, Plus, Trash2 } from 'lucide-react'
+import { Clock3, GraduationCap, Layers } from 'lucide-react'
+import { PlusIcon, TrashIcon } from '../components/ui/AnimatedIcons'
 import { AlertaErro, PageHeader } from '../components/PageHeader'
 import { Button } from '@/components/ui/button'
 import {
@@ -114,7 +115,7 @@ export function Cursos() {
       <Card className="mb-10">
         <CardHeader>
           <CardTitle className="flex items-center gap-2">
-            <Plus className="h-4 w-4 text-primary" />
+            <PlusIcon className="h-4 w-4 text-primary" />
             Novo curso
           </CardTitle>
           <CardDescription>
@@ -159,7 +160,7 @@ export function Cursos() {
             </div>
             <div className="sm:col-span-2 lg:col-span-4">
               <Button type="submit" size="lg" disabled={enviando} className="px-6">
-                <Plus />
+                <PlusIcon />
                 {enviando ? 'Salvando…' : 'Cadastrar curso'}
               </Button>
             </div>
@@ -213,7 +214,7 @@ export function Cursos() {
                   className="w-full rounded-none gap-1.5 text-xs font-medium text-destructive hover:text-destructive"
                   onClick={() => handleExcluir(c.id)}
                 >
-                  <Trash2 className="h-3.5 w-3.5" />
+                  <TrashIcon className="h-3.5 w-3.5" />
                   Excluir
                 </Button>
               </div>

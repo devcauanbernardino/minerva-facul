@@ -19,13 +19,6 @@ import {
   labelSituacaoBoletim,
 } from '../utils/academico'
 import { mensagemErroApi } from '../utils/apiError'
-import { SituacaoPieChart } from '../components/charts/SituacaoPieChart'
-import { NotasFrequenciaChart } from '../components/charts/NotasFrequenciaChart'
-import { DistribuicaoNotasChart } from '../components/charts/DistribuicaoNotasChart'
-import { FrequenciaBarChart } from '../components/charts/FrequenciaBarChart'
-import { MediaBarChart } from '../components/charts/MediaBarChart'
-import { ContagemBarChart } from '../components/charts/ContagemBarChart'
-import { agruparContagem, agruparNotasPorFaixa, encurtarNome } from '../utils/charts'
 
 export function AlunoBoletim() {
   const usuario = getUsuario()
@@ -71,25 +64,6 @@ export function AlunoBoletim() {
     }
   }, [boletim])
 
-  const chartData = useMemo(() => {
-    if (!boletim) return null
-    const comNota = boletim.disciplinas.filter((d) => d.situacao !== 'DISPONIVEL')
-    return {
-      situacoes: agruparContagem(boletim.disciplinas.map((d) => d.situacao)),
-      notas: comNota.map((d) => ({
-        nome: encurtarNome(d.materiaNome),
-        nota: d.nota,
-        frequencia: d.frequencia,
-      })),
-      faixasNota: agruparNotasPorFaixa(comNota.map((d) => d.nota)),
-      frequencias: comNota
-        .filter((d) => d.frequencia != null)
-        .map((d) => ({ name: encurtarNome(d.materiaNome), value: d.frequencia! })),
-      mediaPorDisciplina: comNota
-        .filter((d) => d.nota != null)
-        .map((d) => ({ name: encurtarNome(d.materiaNome), value: d.nota! })),
-    }
-  }, [boletim])
 
   if (carregando) {
     return (
@@ -115,7 +89,7 @@ export function AlunoBoletim() {
             <div className="relative z-10 flex flex-wrap items-start justify-between gap-4">
               <div>
                 <p className="text-sm text-minerva-marmore/75">Aluno</p>
-                <h2 className="font-display text-2xl font-bold">{boletim.nome}</h2>
+                <h2 className="font-display text-2xl font-bold text-minerva-marmore">{boletim.nome}</h2>
                 <div className="mt-2 flex flex-wrap items-center gap-2">
                   <p className="text-sm text-minerva-marmore/85">{boletim.cursoNome}</p>
                   {boletim.bolsa ? (
@@ -146,44 +120,6 @@ export function AlunoBoletim() {
             </div>
           ) : null}
 
-          {chartData ? (
-            <div className="grid gap-8 sm:grid-cols-2 xl:grid-cols-3">
-              <SituacaoPieChart
-                titulo="Situação das disciplinas"
-                descricao="Proporção entre cursando, disponível e outras situações."
-                dados={chartData.situacoes}
-              />
-              <NotasFrequenciaChart
-                titulo="Notas e frequência"
-                descricao="Comparativo por disciplina matriculada."
-                dados={chartData.notas}
-              />
-              <DistribuicaoNotasChart
-                titulo="Distribuição das notas"
-                descricao="Faixas de desempenho no semestre."
-                dados={chartData.faixasNota}
-                vazio="Notas ainda não lançadas."
-              />
-              <FrequenciaBarChart
-                titulo="Frequência por disciplina"
-                descricao="Presença em cada matéria (%)."
-                dados={chartData.frequencias}
-                vazio="Frequência ainda não registrada."
-              />
-              <MediaBarChart
-                titulo="Notas por disciplina"
-                descricao="Comparativo individual (0–10)."
-                dados={chartData.mediaPorDisciplina}
-                vazio="Notas ainda não lançadas."
-              />
-              <ContagemBarChart
-                titulo="Disciplinas por status"
-                descricao="Quantidade em cada situação."
-                dados={chartData.situacoes.map((s) => ({ name: s.name, value: s.value }))}
-                cor="#d4af37"
-              />
-            </div>
-          ) : null}
 
           {boletim.disciplinas.length === 0 ? (
             <EmptyState
